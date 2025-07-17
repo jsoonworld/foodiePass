@@ -15,7 +15,7 @@ public enum GlobalErrorCode implements ErrorCode {
     MISSING_HEADER(HttpStatus.BAD_REQUEST, "요청에 필요한 헤더가 존재하지 않습니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근이 금지되었습니다.");
 
-    public static final String PREFIX = "[GLOBAL ERROR] ";
+    private static final String PREFIX = "[GLOBAL ERROR] ";
 
     private final HttpStatus status;
     private final String rawMessage;
