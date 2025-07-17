@@ -1,5 +1,6 @@
 package foodiepass.server.global.error;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -34,8 +35,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    protected ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        log.warn(">> 지원하지 않는 HTTP 메소드 요청: [{}], 요청 URI: [{}]", e.getMethod(), e.getMessage());
+    protected ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
+        log.warn(">> 지원하지 않는 HTTP 메소드 요청: [{}], 요청 URI: [{}]", e.getMethod(), request.getRequestURI());
         return createResponseEntity(GlobalErrorCode.METHOD_NOT_ALLOWED);
     }
 
