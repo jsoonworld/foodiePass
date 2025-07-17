@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 public class Price {
 
     private final Currency currency;
-    private final Double amount;
+    private final double amount;
 
     public Price add(final Price other) {
         if (!this.currency.equals(other.currency)) {
