@@ -14,6 +14,25 @@ import org.junit.jupiter.api.Test;
 class PriceTest {
 
     @Nested
+    @DisplayName("zero 정적 팩토리 메서드는")
+    class Describe_zero {
+
+        @Test
+        @DisplayName("주어진 통화에 대해 0 값을 가진 Price 객체를 생성한다")
+        void shouldReturnZeroAmountPriceWithGivenCurrency() {
+            // given
+            final Currency currency = Currency.SOUTH_KOREAN_WON;
+            final Price expectedPrice = new Price(currency, 0.0);
+
+            // when
+            final Price actualPrice = Price.zero(currency);
+
+            // then
+            assertThat(actualPrice).isEqualTo(expectedPrice);
+        }
+    }
+
+    @Nested
     @DisplayName("add 메서드는")
     class Describe_add {
 
@@ -23,13 +42,13 @@ class PriceTest {
             // given
             final Price price1 = new Price(Currency.SOUTH_KOREAN_WON, 1000.0);
             final Price price2 = new Price(Currency.SOUTH_KOREAN_WON, 500.0);
+            final Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 1500.0);
 
             // when
             final Price result = price1.add(price2);
 
             // then
-            assertThat(result.getAmount()).isEqualTo(1500.0);
-            assertThat(result.getCurrency()).isEqualTo(Currency.SOUTH_KOREAN_WON);
+            assertThat(result).isEqualTo(expectedPrice);
         }
 
         @Test
@@ -55,13 +74,13 @@ class PriceTest {
         void whenMultiplyingByPositiveQuantity_shouldReturnMultipliedPrice() {
             // given
             final Price price = new Price(Currency.SOUTH_KOREAN_WON, 1000.0);
+            final Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 3000.0);
 
             // when
             final Price result = price.multiply(3);
 
             // then
-            assertThat(result.getAmount()).isEqualTo(3000.0);
-            assertThat(result.getCurrency()).isEqualTo(Currency.SOUTH_KOREAN_WON);
+            assertThat(result).isEqualTo(expectedPrice);
         }
 
         @Test
