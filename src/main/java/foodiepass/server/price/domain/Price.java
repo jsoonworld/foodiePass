@@ -15,6 +15,10 @@ public class Price {
     private final Currency currency;
     private final double amount;
 
+    public static Price zero(final Currency currency) {
+        return new Price(currency, 0.0);
+    }
+
     public Price add(final Price other) {
         if (!this.currency.equals(other.currency)) {
             throw new PriceException(PriceErrorCode.CURRENCIES_DO_NOT_MATCH);
