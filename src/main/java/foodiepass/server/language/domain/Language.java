@@ -43,7 +43,7 @@ public enum Language {
     ESPERANTO("Esperanto", "eo"),
     ESTONIAN("Estonian", "et"),
     EWE("Ewe", "ee"),
-    FILIPINO_TAGLAOG("Filipino (Tagalog)", "fil"),
+    FILIPINO_TAGALOG("Filipino (Tagalog)", "fil"),
     FINNISH("Finnish", "fi"),
     FRENCH("French", "fr"),
     FRISIAN("Frisian", "fy"),
@@ -166,7 +166,7 @@ public enum Language {
                     .replaceAll("\\s*\\(.*?\\)\\s*", "")
                     .split("\\s+or\\s+");
             for (String code : codes) {
-                codeMap.put(code, language);
+                codeMap.put(code.trim(), language);
             }
         }
         CODE_TO_LANGUAGE_MAP = Collections.unmodifiableMap(codeMap);
