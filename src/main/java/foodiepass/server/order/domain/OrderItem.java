@@ -11,7 +11,6 @@ public class OrderItem {
     private final MenuItem menuItem;
     private final int quantity;
 
-
     public Price calculateTotalPrice() {
         return menuItem.getPrice().multiply(quantity);
     }

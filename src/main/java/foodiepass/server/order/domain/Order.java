@@ -17,6 +17,6 @@ public class Order {
     public Price calculateTotalPrice() {
         return items.stream()
                 .map(OrderItem::calculateTotalPrice)
-                .reduce(new Price(this.currency, 0.0), Price::add);
+                .reduce(Price.zero(this.currency), Price::add);
     }
 }
