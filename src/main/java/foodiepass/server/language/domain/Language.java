@@ -183,7 +183,10 @@ public enum Language {
     }
 
     public static Language fromLanguageCode(final String code) {
-        return Optional.ofNullable(CODE_TO_LANGUAGE_MAP.get(code))
+        if (code == null) {
+            throw new LanguageException(LANGUAGE_NOT_FOUND);
+        }
+        return Optional.ofNullable(CODE_TO_LANGUAGE_MAP.get(code.trim()))
                 .orElseThrow(() -> new LanguageException(LANGUAGE_NOT_FOUND));
     }
 
