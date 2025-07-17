@@ -1,0 +1,74 @@
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+### Eclipse / STS ###
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+### VS Code ###
+.vscode/
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+
+# ===============================================================
+# Build & Dependencies (빌드 및 의존성 관련)
+# ===============================================================
+
+### Gradle ###
+.gradle/
+build/
+
+# Gradle Wrapper는 제외하지 않음
+!gradle/wrapper/gradle-wrapper.jar
+!gradle-wrapper.properties
+
+
+# ===============================================================
+# Compiled & Packaged (컴파일 및 패키징 결과물)
+# ===============================================================
+*.class
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# VM crash logs
+hs_err_pid*
+replay_pid*
+
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+
+# ===============================================================
+# Miscellaneous (기타)
+# ===============================================================
+HELP.md
+
