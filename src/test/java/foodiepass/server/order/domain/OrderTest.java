@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class OrderTest {
@@ -26,56 +27,59 @@ class OrderTest {
         KIMCHI_JJIGAE = new MenuItem("돼지고기 김치찌개", kimchiPrice, kimchiInfo);
     }
 
-    @Test
-    @DisplayName("여러 주문 항목들의 총액을 정확히 계산한다")
-    void calculateTotalPrice_shouldSumUpAllOrderItems() {
-        // given
-        OrderItem gukbapOrder = new OrderItem(GUKBAP, 2);
-        OrderItem kimchiOrder = new OrderItem(KIMCHI_JJIGAE, 1);
-        List<OrderItem> items = List.of(gukbapOrder, kimchiOrder);
+    @Nested
+    @DisplayName("calculateTotalPrice 메서드는")
+    class Describe_calculateTotalPrice {
 
-        Order order = new Order(items, Currency.SOUTH_KOREAN_WON);
+        @Test
+        @DisplayName("여러 주문 항목들의 총액을 정확히 계산한다")
+        void shouldSumUpAllOrderItems() {
+            // given
+            OrderItem gukbapOrder = new OrderItem(GUKBAP, 2);
+            OrderItem kimchiOrder = new OrderItem(KIMCHI_JJIGAE, 1);
+            List<OrderItem> items = List.of(gukbapOrder, kimchiOrder);
 
-        Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 26000);
+            Order order = new Order(items, Currency.SOUTH_KOREAN_WON);
 
-        // when
-        Price actualPrice = order.calculateTotalPrice();
+            Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 26000);
 
-        // then
-        assertThat(actualPrice).isEqualTo(expectedPrice);
-    }
+            // when
+            Price actualPrice = order.calculateTotalPrice();
 
-    @Test
-    @DisplayName("주문 항목이 하나일 때, 해당 항목의 총액을 반환한다")
-    void calculateTotalPrice_shouldWorkForSingleItem() {
-        // given
-        OrderItem gukbapOrder = new OrderItem(GUKBAP, 3);
-        List<OrderItem> items = List.of(gukbapOrder);
+            // then
+            assertThat(actualPrice).isEqualTo(expectedPrice);
+        }
 
-        Order order = new Order(items, Currency.SOUTH_KOREAN_WON);
+        @Test
+        @DisplayName("주문 항목이 하나일 때, 해당 항목의 총액을 반환한다")
+        void shouldWorkForSingleItem() {
+            // given
+            OrderItem gukbapOrder = new OrderItem(GUKBAP, 3);
+            List<OrderItem> items = List.of(gukbapOrder);
 
-        Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 27000);
+            Order order = new Order(items, Currency.SOUTH_KOREAN_WON);
 
-        // when
-        Price actualPrice = order.calculateTotalPrice();
+            Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 27000);
 
-        // then
-        assertThat(actualPrice).isEqualTo(expectedPrice);
-    }
+            // when
+            Price actualPrice = order.calculateTotalPrice();
 
-    @Test
-    @DisplayName("주문 항목이 없을 때, 0원의 총액을 반환한다")
-    void calculateTotalPrice_shouldReturnZeroForEmptyOrder() {
-        // given
-        List<OrderItem> emptyItems = Collections.emptyList();
-        Order order = new Order(emptyItems, Currency.SOUTH_KOREAN_WON);
+            // then
+            assertThat(actualPrice).isEqualTo(expectedPrice);
+        }
 
-        Price expectedPrice = new Price(Currency.SOUTH_KOREAN_WON, 0);
+        @Test
+        @DisplayName("주문 항목이 없을 때, 0원의 총액을 반환한다")
+        void shouldReturnZeroForEmptyOrder() {
+            // given
+            List<OrderItem> emptyItems = Collections.emptyList();
+            Order order = new Order(emptyItems, Currency.SOUTH_KOREAN_WON);
 
-        // when
-        Price actualPrice = order.calculateTotalPrice();
+            // when
+            Price actualPrice = order.calculateTotalPrice();
 
-        // then
-        assertThat(actualPrice).isEqualTo(expectedPrice);
+            // then
+            assertThat(actualPrice).isEqualTo(Price.zero(Currency.SOUTH_KOREAN_WON));
+        }
     }
 }
