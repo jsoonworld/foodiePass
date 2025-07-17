@@ -5,6 +5,7 @@ import foodiepass.server.global.success.GlobalSuccessCode;
 import foodiepass.server.global.success.SuccessResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -17,7 +18,9 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
         Class<?> parameterType = returnType.getParameterType();
-        return !(parameterType.equals(ErrorResponse.class) || parameterType.equals(SuccessResponse.class));
+        return !(parameterType.equals(ErrorResponse.class) ||
+                parameterType.equals(SuccessResponse.class) ||
+                parameterType.equals(ResponseEntity.class));
     }
 
     @Override
@@ -25,7 +28,7 @@ public class GlobalResponseAdvice implements ResponseBodyAdvice<Object> {
                                   Class<? extends HttpMessageConverter<?>> selectedConverterType,
                                   ServerHttpRequest request, ServerHttpResponse response) {
         if (body == null) {
-            return null;
+            return SuccessResponse.from(GlobalSuccessCode.OK);
         }
 
         return SuccessResponse.of(GlobalSuccessCode.OK, body);
