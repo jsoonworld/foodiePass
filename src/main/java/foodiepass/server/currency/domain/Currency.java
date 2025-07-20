@@ -1,8 +1,11 @@
 package foodiepass.server.currency.domain;
 
 import foodiepass.server.currency.exception.CurrencyException;
+import lombok.Getter;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -13,7 +16,9 @@ import java.util.stream.Stream;
 
 import static foodiepass.server.currency.exception.CurrencyErrorCode.CURRENCY_NOT_FOUND;
 import static foodiepass.server.currency.exception.CurrencyErrorCode.INVALID_CURRENCY_INPUT;
+import static foodiepass.server.currency.exception.CurrencyErrorCode.UNSUPPORTED_CURRENCY_CODE;
 
+@Getter
 public enum Currency {
     AFGHAN_AFGHANI("Afghan Afghani", "AFN"),
     ALBANIAN_LEK("Albanian Lek", "ALL"),
@@ -194,35 +199,40 @@ public enum Currency {
     }
 
     private static Currency lookupByName(String name) {
-        return Optional.ofNullable(NAME_TO_CURRENCY_MAP.get(name))
+        return Optional.ofNullable(NAME_TO_CURRENCY_MAP.get(name.trim().toLowerCase()))
                 .orElseThrow(() -> new CurrencyException(CURRENCY_NOT_FOUND));
     }
 
     private static Map<String, Currency> createNameToCurrencyMap() {
         return Collections.unmodifiableMap(
                 Stream.of(values())
-                        .collect(Collectors.toMap(Currency::getCurrencyName, Function.identity()))
+                        .collect(Collectors.toMap(
+                                currency -> currency.getCurrencyName().toLowerCase(),
+                                Function.identity()
+                        ))
         );
     }
 
     private static Map<String, Currency> createCodeToCurrencyMap() {
-        return Stream.of(values())
+        return Collections.unmodifiableMap(Stream.of(values())
                 .flatMap(currency ->
                         Arrays.stream(currency.getCurrencyCode().split("\\s+or\\s+"))
-                                .map(code -> Map.entry(code.replaceAll("\\(.*?\\)", "").trim(), currency))
+                                .map(code -> Map.entry(code.replaceAll("\\(.*?\\)", "").trim().toUpperCase(), currency))
                 )
-                .collect(Collectors.toUnmodifiableMap(
+                .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
                         (existing, replacement) -> existing
-                ));
+                )));
     }
 
-    public String getCurrencyName() {
-        return currencyName;
-    }
-
-    public String getCurrencyCode() {
-        return currencyCode;
+    public String format(BigDecimal amount) {
+        NumberFormat numberFormat = NumberFormat.getCurrencyInstance();
+        try {
+            numberFormat.setCurrency(java.util.Currency.getInstance(this.currencyCode));
+        } catch (IllegalArgumentException e) {
+            throw new CurrencyException(UNSUPPORTED_CURRENCY_CODE);
+        }
+        return numberFormat.format(amount);
     }
 }

@@ -26,7 +26,21 @@ configurations {
 dependencies {
 	// Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+	// Google Cloud & OCR
+	implementation 'com.google.cloud:google-cloud-vertexai'
+	implementation 'com.google.cloud:google-cloud-translate'
+	implementation platform('com.google.cloud:libraries-bom:26.40.0')
+
+	// Web Scraping
+	implementation 'org.jsoup:jsoup:1.17.2'
+	implementation 'org.seleniumhq.selenium:selenium-java:4.22.0'
+
+	// Utils
+	implementation 'org.apache.commons:commons-text:1.12.0'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
@@ -35,9 +49,7 @@ dependencies {
 	// Test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	// H2 Database (for Test)
-	testImplementation 'com.h2database:h2'
+	runtimeOnly 'com.h2database:h2'
 }
 
 tasks.named('test') {
