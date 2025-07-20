@@ -127,7 +127,7 @@ public enum Currency {
     SALVADORAN_COLON("Salvadoran Colón", "SVC"),
     SAUDI_RIYAL("Saudi Riyal", "SAR"),
     SERBIAN_DINAR("Serbian Dinar", "RSD"),
-    SEYCHELLOIS_RUpee("Seychellois Rupee", "SCR"),
+    SEYCHELLOIS_RUPEE("Seychellois Rupee", "SCR"),
     SIERRA_LEONEAN_LEONE_1964_2022("Sierra Leonean Leone (1964—2022)", "SLL"),
     SINGAPORE_DOLLAR("Singapore Dollar", "SGD"),
     SOL("Sol", "PEN"),
