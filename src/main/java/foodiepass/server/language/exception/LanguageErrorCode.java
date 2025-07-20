@@ -10,11 +10,11 @@ import org.springframework.http.HttpStatus;
 public enum LanguageErrorCode implements ErrorCode {
 
     LANGUAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "지원하지 않는 언어입니다."),
+    INVALID_LANGUAGE_INPUT(HttpStatus.BAD_REQUEST, "언어 이름 또는 코드는 비어있을 수 없습니다.");
     ;
 
-    private static final String PREFIX = "[LANGUAGE ERROR] ";
     private final HttpStatus status;
-    private final String rawMessage;
+    private final String message;
 
     @Override
     public HttpStatus getStatus() {
@@ -23,6 +23,6 @@ public enum LanguageErrorCode implements ErrorCode {
 
     @Override
     public String getMessage() {
-        return PREFIX + rawMessage;
+        return message;
     }
 }

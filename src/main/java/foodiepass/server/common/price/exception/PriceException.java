@@ -1,4 +1,4 @@
-package foodiepass.server.price.exception;
+package foodiepass.server.common.price.exception;
 
 import foodiepass.server.global.error.BaseException;
 

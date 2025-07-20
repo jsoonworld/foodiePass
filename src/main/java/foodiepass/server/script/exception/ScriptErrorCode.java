@@ -1,4 +1,4 @@
-package foodiepass.server.currency.exception;
+package foodiepass.server.script.exception;
 
 import foodiepass.server.global.error.ErrorCode;
 import lombok.AllArgsConstructor;
@@ -7,10 +7,11 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum CurrencyErrorCode implements ErrorCode {
+public enum ScriptErrorCode implements ErrorCode {
 
-    CURRENCY_NOT_FOUND(HttpStatus.NOT_FOUND, "유효하지 않은 통화입니다."),
-    INVALID_CURRENCY_INPUT(HttpStatus.BAD_REQUEST, "통화 이름 또는 코드는 비어있을 수 없습니다.");
+    SCRIPT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 스크립트입니다."),
+    INVALID_TRAVELER_SCRIPT(HttpStatus.BAD_REQUEST, "여행자 스크립트는 비어있을 수 없습니다."),
+    INVALID_LOCAL_SCRIPT(HttpStatus.BAD_REQUEST, "현지인 스크립트는 비어있을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

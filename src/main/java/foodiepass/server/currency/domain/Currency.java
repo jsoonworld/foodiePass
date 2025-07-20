@@ -1,8 +1,9 @@
 package foodiepass.server.currency.domain;
 
-import static foodiepass.server.currency.exception.CurrencyErrorCode.CURRENCY_NOT_FOUND;
-
 import foodiepass.server.currency.exception.CurrencyException;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -10,8 +11,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public enum Currency {
+import static foodiepass.server.currency.exception.CurrencyErrorCode.CURRENCY_NOT_FOUND;
+import static foodiepass.server.currency.exception.CurrencyErrorCode.INVALID_CURRENCY_INPUT;
 
+public enum Currency {
     AFGHAN_AFGHANI("Afghan Afghani", "AFN"),
     ALBANIAN_LEK("Albanian Lek", "ALL"),
     ALGERIAN_DINAR("Algerian Dinar", "DZD"),
@@ -36,12 +39,12 @@ public enum Currency {
     BRUNEI_DOLLAR("Brunei Dollar", "BND"),
     BULGARIAN_LEV("Bulgarian Lev", "BGN"),
     BURUNDIAN_FRANC("Burundian Franc", "BIF"),
-    CFP_FRANC("CFP Franc", "XPF"),
     CAMBODIAN_RIEL("Cambodian riel", "KHR"),
     CANADIAN_DOLLAR("Canadian Dollar", "CAD"),
     CAPE_VERDEAN_ESCUDO("Cape Verdean Escudo", "CVE"),
     CAYMAN_ISLANDS_DOLLAR("Cayman Islands Dollar", "KYD"),
     CENTRAL_AFRICAN_CFA_FRANC("Central African CFA franc", "XAF"),
+    CFP_FRANC("CFP Franc", "XPF"),
     CHILEAN_PESO("Chilean Peso", "CLP"),
     CHILEAN_UNIT_OF_ACCOUNT_UF("Chilean Unit of Account (UF)", "CLF"),
     CHINESE_YUAN("Chinese Yuan", "CNY"),
@@ -158,37 +161,61 @@ public enum Currency {
     YEMENI_RIAL("Yemeni Rial", "YER"),
     ZAMBIAN_KWACHA("Zambian Kwacha", "ZMW");
 
+    private static final Map<String, Currency> CODE_TO_CURRENCY_MAP = createCodeToCurrencyMap();
+    private static final Map<String, Currency> NAME_TO_CURRENCY_MAP = createNameToCurrencyMap();
+
     private final String currencyName;
     private final String currencyCode;
-
-    private static final Map<String, Currency> CODE_TO_CURRENCY_MAP;
-    private static final Map<String, Currency> NAME_TO_CURRENCY_MAP;
-
-    static {
-        CODE_TO_CURRENCY_MAP = Collections.unmodifiableMap(
-                Stream.of(values())
-                        .collect(Collectors.toMap(Currency::getCurrencyCode, Function.identity()))
-        );
-
-        NAME_TO_CURRENCY_MAP = Collections.unmodifiableMap(
-                Stream.of(values())
-                        .collect(Collectors.toMap(Currency::getCurrencyName, Function.identity()))
-        );
-    }
 
     Currency(final String currencyName, final String currencyCode) {
         this.currencyName = currencyName;
         this.currencyCode = currencyCode;
     }
 
+    public static Currency fromCurrencyCode(final String code) {
+        validateInput(code);
+        return lookupByCode(code);
+    }
+
     public static Currency fromCurrencyName(final String currencyName) {
-        return Optional.ofNullable(NAME_TO_CURRENCY_MAP.get(currencyName))
+        validateInput(currencyName);
+        return lookupByName(currencyName);
+    }
+
+    private static void validateInput(String input) {
+        if (!StringUtils.hasText(input)) {
+            throw new CurrencyException(INVALID_CURRENCY_INPUT);
+        }
+    }
+
+    private static Currency lookupByCode(String code) {
+        return Optional.ofNullable(CODE_TO_CURRENCY_MAP.get(code.trim().toUpperCase()))
                 .orElseThrow(() -> new CurrencyException(CURRENCY_NOT_FOUND));
     }
 
-    public static Currency fromCurrencyCode(final String code) {
-        return Optional.ofNullable(CODE_TO_CURRENCY_MAP.get(code))
+    private static Currency lookupByName(String name) {
+        return Optional.ofNullable(NAME_TO_CURRENCY_MAP.get(name))
                 .orElseThrow(() -> new CurrencyException(CURRENCY_NOT_FOUND));
+    }
+
+    private static Map<String, Currency> createNameToCurrencyMap() {
+        return Collections.unmodifiableMap(
+                Stream.of(values())
+                        .collect(Collectors.toMap(Currency::getCurrencyName, Function.identity()))
+        );
+    }
+
+    private static Map<String, Currency> createCodeToCurrencyMap() {
+        return Stream.of(values())
+                .flatMap(currency ->
+                        Arrays.stream(currency.getCurrencyCode().split("\\s+or\\s+"))
+                                .map(code -> Map.entry(code.replaceAll("\\(.*?\\)", "").trim(), currency))
+                )
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (existing, replacement) -> existing
+                ));
     }
 
     public String getCurrencyName() {
