@@ -1,8 +1,9 @@
 package foodiepass.server.language.domain;
 
-import static foodiepass.server.language.exception.LanguageErrorCode.LANGUAGE_NOT_FOUND;
-
 import foodiepass.server.language.exception.LanguageException;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +11,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static foodiepass.server.language.exception.LanguageErrorCode.INVALID_LANGUAGE_INPUT;
+import static foodiepass.server.language.exception.LanguageErrorCode.LANGUAGE_NOT_FOUND;
 
 public enum Language {
 
@@ -148,29 +152,11 @@ public enum Language {
     YORUBA("Yoruba", "yo"),
     ZULU("Zulu", "zu");
 
+    private static final Map<String, Language> NAME_TO_LANGUAGE_MAP = createNameToLanguageMap();
+    private static final Map<String, Language> CODE_TO_LANGUAGE_MAP = createCodeToLanguageMap();
+
     private final String languageName;
     private final String languageCode;
-
-    private static final Map<String, Language> NAME_TO_LANGUAGE_MAP;
-    private static final Map<String, Language> CODE_TO_LANGUAGE_MAP;
-
-    static {
-        NAME_TO_LANGUAGE_MAP = Collections.unmodifiableMap(
-                Stream.of(values())
-                        .collect(Collectors.toMap(Language::getLanguageName, Function.identity()))
-        );
-
-        Map<String, Language> codeMap = new HashMap<>();
-        for (Language language : values()) {
-            String[] codes = language.getLanguageCode()
-                    .replaceAll("\\s*\\(.*?\\)\\s*", "")
-                    .split("\\s+or\\s+");
-            for (String code : codes) {
-                codeMap.put(code.trim(), language);
-            }
-        }
-        CODE_TO_LANGUAGE_MAP = Collections.unmodifiableMap(codeMap);
-    }
 
     Language(final String languageName, final String languageCode) {
         this.languageName = languageName;
@@ -178,16 +164,54 @@ public enum Language {
     }
 
     public static Language fromLanguageName(final String languageName) {
+        validateInput(languageName);
+        return lookupByName(languageName);
+    }
+
+    public static Language fromLanguageCode(final String code) {
+        validateInput(code);
+        return lookupByCode(code);
+    }
+
+    private static void validateInput(String input) {
+        if (!StringUtils.hasText(input)) {
+            throw new LanguageException(INVALID_LANGUAGE_INPUT);
+        }
+    }
+
+    private static Language lookupByName(String languageName) {
         return Optional.ofNullable(NAME_TO_LANGUAGE_MAP.get(languageName))
                 .orElseThrow(() -> new LanguageException(LANGUAGE_NOT_FOUND));
     }
 
-    public static Language fromLanguageCode(final String code) {
-        if (code == null) {
-            throw new LanguageException(LANGUAGE_NOT_FOUND);
-        }
-        return Optional.ofNullable(CODE_TO_LANGUAGE_MAP.get(code.trim()))
+    private static Language lookupByCode(String code) {
+        return Optional.ofNullable(CODE_TO_LANGUAGE_MAP.get(code.trim().toLowerCase()))
                 .orElseThrow(() -> new LanguageException(LANGUAGE_NOT_FOUND));
+    }
+
+    private static Map<String, Language> createNameToLanguageMap() {
+        return Collections.unmodifiableMap(
+                Stream.of(values())
+                        .collect(Collectors.toMap(Language::getLanguageName, Function.identity()))
+        );
+    }
+
+    private static Map<String, Language> createCodeToLanguageMap() {
+        return Stream.of(values())
+                .flatMap(language -> {
+                    String[] codes = language.getLanguageCode()
+                            .replaceAll("\\s*\\(.*?\\)\\s*", "")
+                            .toLowerCase()
+                            .split("\\s+or\\s+");
+
+                    return Arrays.stream(codes)
+                            .map(code -> Map.entry(code.trim(), language));
+                })
+                .collect(Collectors.toUnmodifiableMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (existingValue, newValue) -> newValue
+                ));
     }
 
     public String getLanguageName() {
