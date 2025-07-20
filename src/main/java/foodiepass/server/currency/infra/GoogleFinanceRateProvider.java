@@ -27,7 +27,7 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
     }
 
     @Override
-    @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '-' + #to.currencyCode", unless = "#result == null")
+    @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '::' + #to.currencyCode", unless = "#result == null")
     public Double getExchangeRate(final Currency from, final Currency to) {
         if (from.equals(to)) {
             return 1.0;
