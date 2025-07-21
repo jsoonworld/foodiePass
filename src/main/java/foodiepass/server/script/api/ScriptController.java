@@ -14,7 +14,7 @@ public class ScriptController {
 
     private final ScriptService scriptService;
 
-    @PostMapping("/script")
+    @PostMapping("/scripts/generate")
     public ScriptResponse generateScript(
             @RequestBody final ScriptGenerateRequest request
     ) {
