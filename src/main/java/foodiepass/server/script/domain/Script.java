@@ -14,21 +14,15 @@ public final class Script {
     private final String localScript;
 
     public Script(String travelerScript, String localScript) {
-        validateTravelerScript(travelerScript);
-        validateLocalScript(localScript);
+        validate(travelerScript, ScriptErrorCode.INVALID_TRAVELER_SCRIPT);
+        validate(localScript, ScriptErrorCode.INVALID_LOCAL_SCRIPT);
         this.travelerScript = travelerScript;
         this.localScript = localScript;
     }
 
-    private void validateTravelerScript(String travelerScript) {
-        if (!StringUtils.hasText(travelerScript)) {
-            throw new ScriptException(ScriptErrorCode.INVALID_TRAVELER_SCRIPT);
-        }
-    }
-
-    private void validateLocalScript(String localScript) {
-        if (!StringUtils.hasText(localScript)) {
-            throw new ScriptException(ScriptErrorCode.INVALID_LOCAL_SCRIPT);
+    private void validate(String scriptText, ScriptErrorCode errorCode) {
+        if (!StringUtils.hasText(scriptText)) {
+            throw new ScriptException(errorCode);
         }
     }
 }
