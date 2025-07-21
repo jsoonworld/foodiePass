@@ -75,9 +75,11 @@ class CurrencyServiceTest {
             // then
             assertThat(response).isNotNull();
 
+            // 원본 통화 총액 계산: 15.99 * 1 + 4.50 * 2 = 24.99
             assertThat(response.originTotalPrice().value()).isEqualByComparingTo("24.99");
             assertThat(response.originTotalPrice().currencyCode()).isEqualTo("USD");
 
+            // 사용자 통화 총액 계산: 24.99 * 1350.50 = 33749.995, 서비스 로직에 의해 33749.00으로 포맷팅
             assertThat(response.userTotalPrice().value()).isEqualByComparingTo("33749.00");
             assertThat(response.userTotalPrice().currencyCode()).isEqualTo("KRW");
         }
