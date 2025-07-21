@@ -7,12 +7,17 @@ import foodiepass.server.food.domain.TranslationClient;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.language.exception.LanguageErrorCode;
 import foodiepass.server.language.exception.LanguageException;
+import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import static com.google.cloud.translate.Translate.TranslateOption.model;
 import static com.google.cloud.translate.Translate.TranslateOption.sourceLanguage;
 import static com.google.cloud.translate.Translate.TranslateOption.targetLanguage;
 
+@Component
 public class GoogleTranslationClient implements TranslationClient {
 
     private final Translate translate;
@@ -20,16 +25,20 @@ public class GoogleTranslationClient implements TranslationClient {
 
     public GoogleTranslationClient(
             final Translate translate,
-            final String translationModel
+            @Value("${google.translation.model}") final String translationModel
     ) {
         this.translate = translate;
         this.translationModel = translationModel;
     }
 
     @Override
-    @Cacheable(cacheNames = "translations")
-    public String translate(final Language from, final Language to, final String content) {
-        if (from.equals(to)) {
+    @Cacheable(cacheNames = "translations", key = "{#from.name(), #to.name(), #content}")
+    public String translate(
+            @NonNull final Language from,
+            @NonNull final Language to,
+            @NonNull final String content
+    ) {
+        if (!StringUtils.hasText(content) || from.equals(to)) {
             return content;
         }
 
