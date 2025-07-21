@@ -9,6 +9,7 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 
 @Configuration
@@ -34,6 +35,7 @@ public class TranslationConfig {
     }
 
     @Bean
+    @Primary
     public TranslationClient translationClient(
             final Translate translate,
             @Value("${google.translation.model}") final String translationModel
