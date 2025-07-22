@@ -1,9 +1,7 @@
-package foodiepass.server.food.domain;
+package foodiepass.server.menu.domain;
 
 import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
-import foodiepass.server.menu.domain.FoodInfo;
-import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.exception.FoodErrorCode;
 import foodiepass.server.menu.exception.FoodException;
 import org.junit.jupiter.api.BeforeEach;
