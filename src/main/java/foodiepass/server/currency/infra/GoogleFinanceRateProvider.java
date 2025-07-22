@@ -2,8 +2,8 @@ package foodiepass.server.currency.infra;
 
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.menu.domain.ExchangeRateProvider;
-import foodiepass.server.menu.exception.ScrapingErrorCode;
-import foodiepass.server.menu.exception.ScrapingException;
+import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
+import foodiepass.server.menu.infra.exception.ScrapingException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
