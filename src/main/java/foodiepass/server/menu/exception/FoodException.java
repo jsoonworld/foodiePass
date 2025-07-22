@@ -1,4 +1,4 @@
-package foodiepass.server.food.exception;
+package foodiepass.server.menu.exception;
 
 import foodiepass.server.global.error.BaseException;
 import foodiepass.server.global.error.ErrorCode;

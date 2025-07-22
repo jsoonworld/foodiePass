@@ -1,4 +1,4 @@
-package foodiepass.server.food.domain;
+package foodiepass.server.menu.domain;
 
 import foodiepass.server.currency.domain.Currency;
 
