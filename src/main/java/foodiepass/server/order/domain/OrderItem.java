@@ -1,7 +1,7 @@
 package foodiepass.server.order.domain;
 
 import foodiepass.server.common.price.domain.Price;
-import foodiepass.server.food.domain.MenuItem;
+import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.order.exception.OrderErrorCode;
 import foodiepass.server.order.exception.OrderException;
 import lombok.EqualsAndHashCode;

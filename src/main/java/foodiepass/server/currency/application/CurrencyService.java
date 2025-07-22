@@ -5,7 +5,7 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest;
 import foodiepass.server.currency.dto.request.CalculatePriceRequest.OrderElementRequest;
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
-import foodiepass.server.food.domain.ExchangeRateProvider;
+import foodiepass.server.menu.domain.ExchangeRateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

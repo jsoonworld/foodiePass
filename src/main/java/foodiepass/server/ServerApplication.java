@@ -1,9 +1,12 @@
 package foodiepass.server;
 
+import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
+@EnableConfigurationProperties(TasteAtlasProperties.class)
 public class ServerApplication {
 
 	public static void main(String[] args) {
