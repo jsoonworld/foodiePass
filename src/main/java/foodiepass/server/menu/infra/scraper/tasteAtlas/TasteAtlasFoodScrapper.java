@@ -8,9 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.List;
@@ -36,12 +36,6 @@ public class TasteAtlasFoodScrapper implements FoodScrapper {
     }
 
     private Mono<FoodInfo> getFoodInfo(String foodName) {
-        Mono<FoodInfo> cachedMono = foodInfoCache.get(foodName);
-        if (cachedMono != null) {
-            log.debug("캐시 히트: foodName='{}'", foodName);
-            return cachedMono;
-        }
-        log.debug("캐시 미스: foodName='{}'", foodName);
         return foodInfoCache.computeIfAbsent(foodName, this::fetchAndCache);
     }
 
@@ -49,6 +43,8 @@ public class TasteAtlasFoodScrapper implements FoodScrapper {
         log.info("TasteAtlas 스크래핑 시작: foodName='{}'", foodName);
 
         return apiClient.search(foodName)
+                .timeout(Duration.ofSeconds(10))
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)))
                 .flatMap(response -> Mono.justOrEmpty(findFirstItem(response)))
                 .flatMap(item -> {
                     String fullUrl = properties.baseUrl() + item.urlLink();
@@ -85,12 +81,5 @@ public class TasteAtlasFoodScrapper implements FoodScrapper {
         }
         log.debug("TasteAtlas 응답에서 아이템을 찾지 못했습니다.");
         return Optional.empty();
-    }
-
-    private String generateFullName(TasteAtlasResponse.Item item) {
-        if (!StringUtils.hasText(item.otherName())) {
-            return item.name();
-        }
-        return String.format("%s (%s)", item.name(), item.otherName());
     }
 }
