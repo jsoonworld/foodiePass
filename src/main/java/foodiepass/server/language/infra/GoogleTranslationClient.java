@@ -3,15 +3,17 @@ package foodiepass.server.language.infra;
 import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.TranslateException;
 import com.google.cloud.translate.Translation;
-import foodiepass.server.menu.domain.TranslationClient;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.language.exception.LanguageErrorCode;
 import foodiepass.server.language.exception.LanguageException;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static com.google.cloud.translate.Translate.TranslateOption.model;
 import static com.google.cloud.translate.Translate.TranslateOption.sourceLanguage;
@@ -53,5 +55,15 @@ public class GoogleTranslationClient implements TranslationClient {
         } catch (final TranslateException e) {
             throw new LanguageException(LanguageErrorCode.TRANSLATION_FAILED);
         }
+    }
+
+    @Override
+    public Mono<String> translateAsync(
+            @NonNull final Language from,
+            @NonNull final Language to,
+            @NonNull final String content
+    ) {
+        return Mono.fromCallable(() -> translate(from, to, content))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
