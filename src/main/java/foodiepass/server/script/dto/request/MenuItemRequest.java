@@ -3,8 +3,8 @@ package foodiepass.server.script.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
-import foodiepass.server.food.domain.FoodInfo;
-import foodiepass.server.food.domain.MenuItem;
+import foodiepass.server.menu.domain.FoodInfo;
+import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.order.domain.OrderItem;
 
 import java.math.BigDecimal;

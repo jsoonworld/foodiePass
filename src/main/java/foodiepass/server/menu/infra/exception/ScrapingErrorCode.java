@@ -1,4 +1,4 @@
-package foodiepass.server.food.infra.exception;
+package foodiepass.server.menu.infra.exception;
 
 import foodiepass.server.global.error.ErrorCode;
 import lombok.AllArgsConstructor;

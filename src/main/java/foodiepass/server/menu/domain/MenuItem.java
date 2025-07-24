@@ -1,8 +1,8 @@
-package foodiepass.server.food.domain;
+package foodiepass.server.menu.domain;
 
 import foodiepass.server.common.price.domain.Price;
-import foodiepass.server.food.exception.FoodErrorCode;
-import foodiepass.server.food.exception.FoodException;
+import foodiepass.server.menu.exception.FoodErrorCode;
+import foodiepass.server.menu.exception.FoodException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.springframework.util.StringUtils;

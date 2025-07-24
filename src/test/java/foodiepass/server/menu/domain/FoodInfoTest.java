@@ -1,7 +1,7 @@
-package foodiepass.server.food.domain;
+package foodiepass.server.menu.domain;
 
-import foodiepass.server.food.exception.FoodErrorCode;
-import foodiepass.server.food.exception.FoodException;
+import foodiepass.server.menu.exception.FoodErrorCode;
+import foodiepass.server.menu.exception.FoodException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

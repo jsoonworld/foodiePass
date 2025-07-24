@@ -3,7 +3,7 @@ package foodiepass.server.language.infra;
 import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.TranslateException;
 import com.google.cloud.translate.Translation;
-import foodiepass.server.food.domain.TranslationClient;
+import foodiepass.server.menu.domain.TranslationClient;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.language.exception.LanguageErrorCode;
 import foodiepass.server.language.exception.LanguageException;

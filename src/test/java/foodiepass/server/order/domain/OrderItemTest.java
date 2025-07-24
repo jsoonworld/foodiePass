@@ -2,8 +2,8 @@ package foodiepass.server.order.domain;
 
 import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
-import foodiepass.server.food.domain.FoodInfo;
-import foodiepass.server.food.domain.MenuItem;
+import foodiepass.server.menu.domain.FoodInfo;
+import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.order.exception.OrderErrorCode;
 import foodiepass.server.order.exception.OrderException;
 import org.junit.jupiter.api.BeforeEach;
