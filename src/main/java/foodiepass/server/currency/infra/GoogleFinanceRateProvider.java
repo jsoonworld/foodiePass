@@ -1,7 +1,7 @@
 package foodiepass.server.currency.infra;
 
 import foodiepass.server.currency.domain.Currency;
-import foodiepass.server.menu.domain.ExchangeRateProvider;
+import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
 import org.jsoup.Jsoup;
@@ -10,6 +10,8 @@ import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 
@@ -28,7 +30,7 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
 
     @Override
     @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '::' + #to.currencyCode", unless = "#result == null")
-    public Double getExchangeRate(final Currency from, final Currency to) {
+    public double getExchangeRate(final Currency from, final Currency to) {
         if (from.equals(to)) {
             return 1.0;
         }
@@ -50,5 +52,12 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
         } catch (NumberFormatException e) {
             throw new ScrapingException(ScrapingErrorCode.RATE_PARSING_FAILED);
         }
+    }
+
+    @Override
+    @Cacheable(value = "exchangeRatesAsync", key = "#from.currencyCode + '::' + #to.currencyCode", unless = "#result == null")
+    public Mono<Double> getExchangeRateAsync(final Currency from, final Currency to) {
+        return Mono.fromCallable(() -> getExchangeRate(from, to))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

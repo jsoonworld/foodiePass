@@ -5,7 +5,7 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest;
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
 import foodiepass.server.currency.exception.CurrencyException;
-import foodiepass.server.menu.domain.ExchangeRateProvider;
+import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

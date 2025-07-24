@@ -1,7 +1,7 @@
 package foodiepass.server.script.application;
 
-import foodiepass.server.menu.domain.TranslationClient;
 import foodiepass.server.language.domain.Language;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.order.domain.OrderItem;
 import foodiepass.server.script.domain.Script;
 import jakarta.annotation.PostConstruct;

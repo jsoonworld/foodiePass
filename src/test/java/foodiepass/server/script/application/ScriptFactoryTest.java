@@ -1,9 +1,9 @@
 package foodiepass.server.script.application;
 
 import foodiepass.server.common.price.domain.Price;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
-import foodiepass.server.menu.domain.TranslationClient;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.order.domain.OrderItem;
 import foodiepass.server.script.domain.Script;
