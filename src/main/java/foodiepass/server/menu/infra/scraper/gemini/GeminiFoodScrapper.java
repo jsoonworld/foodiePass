@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GeminiFoodScrapper implements FoodScrapper {
 
     private static final String FOOD_INFO_PROMPT_TEMPLATE = """
-        Get the 200-character description and image url for food %s from the tasteatlas site
+        Get the 200-character description and image url for food %s.
         Please print it out in valid JSON format
         {
             "image": "valid image url of food (String)",
