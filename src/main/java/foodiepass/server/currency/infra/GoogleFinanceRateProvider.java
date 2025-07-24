@@ -29,7 +29,7 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
     }
 
     @Override
-    @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '::' + #to.currencyCode", unless = "#result == null")
+    @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '::' + #to.currencyCode")
     public double getExchangeRate(final Currency from, final Currency to) {
         if (from.equals(to)) {
             return 1.0;
@@ -55,7 +55,7 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
     }
 
     @Override
-    @Cacheable(value = "exchangeRatesAsync", key = "#from.currencyCode + '::' + #to.currencyCode", unless = "#result == null")
+    @Cacheable(value = "exchangeRatesAsync", key = "#from.currencyCode + '::' + #to.currencyCode")
     public Mono<Double> getExchangeRateAsync(final Currency from, final Currency to) {
         return Mono.fromCallable(() -> getExchangeRate(from, to))
                 .subscribeOn(Schedulers.boundedElastic());
