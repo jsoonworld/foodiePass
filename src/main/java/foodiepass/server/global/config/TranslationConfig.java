@@ -2,7 +2,7 @@ package foodiepass.server.global.config;
 
 import com.google.cloud.translate.Translate;
 import foodiepass.server.language.infra.GoogleTranslationClient;
-import foodiepass.server.menu.domain.TranslationClient;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,11 +1,13 @@
 package foodiepass.server.currency.application;
 
+import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.currency.dto.request.CalculatePriceRequest;
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
 import foodiepass.server.currency.exception.CurrencyException;
-import foodiepass.server.menu.domain.ExchangeRateProvider;
+import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
+import foodiepass.server.menu.dto.response.ReconfigureResponse.PriceInfoResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -45,10 +49,32 @@ class CurrencyServiceTest {
         // then
         assertThat(responses).isNotNull();
         assertThat(responses.size()).isEqualTo(expectedSize);
-
         assertThat(responses)
                 .extracting(CurrencyResponse::currencyName)
                 .contains(Currency.SOUTH_KOREAN_WON.getCurrencyName());
+    }
+
+    @Test
+    @DisplayName("convertAndFormatAsync는 가격을 비동기적으로 변환하고 포맷팅한다")
+    void convertAndFormatAsync_shouldConvertAndFormatPrice() {
+        // given
+        Price originPrice = new Price(Currency.SOUTH_KOREAN_WON, new BigDecimal("1000"));
+        Currency userCurrency = Currency.JAPANESE_YEN;
+        double exchangeRate = 10.5;
+
+        given(exchangeRateProvider.getExchangeRateAsync(Currency.SOUTH_KOREAN_WON, userCurrency))
+                .willReturn(Mono.just(exchangeRate));
+
+        // when
+        Mono<PriceInfoResponse> result = currencyService.convertAndFormatAsync(originPrice, userCurrency);
+
+        // then
+        StepVerifier.create(result)
+                .expectNextMatches(priceInfo ->
+                        priceInfo.originPriceWithCurrencyUnit().contains("₩") &&
+                                priceInfo.userPriceWithCurrencyUnit().contains("¥")
+                )
+                .verifyComplete();
     }
 
     @Nested
@@ -74,12 +100,8 @@ class CurrencyServiceTest {
 
             // then
             assertThat(response).isNotNull();
-
-            // 원본 통화 총액 계산: 15.99 * 1 + 4.50 * 2 = 24.99
             assertThat(response.originTotalPrice().value()).isEqualByComparingTo("24.99");
             assertThat(response.originTotalPrice().currencyCode()).isEqualTo("USD");
-
-            // 사용자 통화 총액 계산: 24.99 * 1350.50 = 33749.995, 서비스 로직에 의해 33749.00으로 포맷팅
             assertThat(response.userTotalPrice().value()).isEqualByComparingTo("33749.00");
             assertThat(response.userTotalPrice().currencyCode()).isEqualTo("KRW");
         }
