@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +40,7 @@ class MenuControllerTest {
 
     @Test
     @DisplayName("POST /menu/reconfigure 요청 시 메뉴 재구성 결과를 성공적으로 반환한다")
-    void reconfigure_shouldReturnReconfiguredMenu() throws Exception {
+    void reconfigure_shouldReturnReconfiguredMenu() {
         // given
         ReconfigureRequest request = new ReconfigureRequest(
                 "base64image", "Korean", "English", "KRW", "USD"
@@ -60,8 +61,8 @@ class MenuControllerTest {
                 .expectStatus().isOk()
                 .expectBody(ReconfigureResponse.class)
                 .value(response -> {
-                    assert response.results().get(0).originMenuName().equals("김치찌개");
-                    assert response.results().get(0).translatedMenuName().equals("Kimchi Stew");
+                    assertThat(response.results().get(0).originMenuName()).isEqualTo("김치찌개");
+                    assertThat(response.results().get(0).translatedMenuName()).isEqualTo("Kimchi Stew");
                 });
     }
 }
