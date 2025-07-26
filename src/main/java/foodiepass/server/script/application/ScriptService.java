@@ -2,14 +2,12 @@ package foodiepass.server.script.application;
 
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.order.domain.OrderItem;
-import foodiepass.server.script.domain.Script;
 import foodiepass.server.script.dto.request.MenuItemRequest;
 import foodiepass.server.script.dto.request.ScriptGenerateRequest;
 import foodiepass.server.script.dto.response.ScriptResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -19,8 +17,7 @@ public class ScriptService {
 
     private final ScriptFactory scriptFactory;
 
-    @Transactional(readOnly = true)
-    public ScriptResponse generateScript(final ScriptGenerateRequest request) {
+    public Mono<ScriptResponse> generateScript(final ScriptGenerateRequest request) {
         final Language sourceLanguage = Language.fromLanguageName(request.userLanguageName());
         final Language targetLanguage = Language.fromLanguageName(request.originLanguageName());
 
@@ -29,8 +26,7 @@ public class ScriptService {
                 .map(MenuItemRequest::toDomain)
                 .toList();
 
-        final Script script = scriptFactory.create(sourceLanguage, targetLanguage, orderItems);
-
-        return new ScriptResponse(script.getTravelerScript(), script.getLocalScript());
+        return scriptFactory.createAsync(sourceLanguage, targetLanguage, orderItems)
+                .map(script -> new ScriptResponse(script.getTravelerScript(), script.getLocalScript()));
     }
 }

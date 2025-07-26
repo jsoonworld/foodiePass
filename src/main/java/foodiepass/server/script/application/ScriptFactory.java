@@ -7,6 +7,7 @@ import foodiepass.server.script.domain.Script;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -40,12 +41,32 @@ public class ScriptFactory {
         return new Script(travelerScript, localScript);
     }
 
+    public Mono<Script> createAsync(final Language sourceLanguage, final Language targetLanguage, final List<OrderItem> orderItems) {
+        return getOrTranslatePrefixAsync(sourceLanguage)
+                .flatMap(prefix -> {
+                    final String concatenatedOrders = concatOrderItems(orderItems);
+                    final String travelerScript = prefix + lineSeparator() + concatenatedOrders;
+
+                    return translationClient.translateAsync(sourceLanguage, targetLanguage, travelerScript)
+                            .map(localScript -> new Script(travelerScript, localScript));
+                });
+    }
+
     private String getOrTranslatePrefix(final Language language) {
         return prefixCache.computeIfAbsent(
                 language,
                 lang -> translationClient.translate(ENGLISH, lang, ENGLISH_SCRIPT_PREFIX)
         );
     }
+
+    private Mono<String> getOrTranslatePrefixAsync(final Language language) {
+        if (prefixCache.containsKey(language)) {
+            return Mono.just(prefixCache.get(language));
+        }
+        return translationClient.translateAsync(ENGLISH, language, ENGLISH_SCRIPT_PREFIX)
+                .doOnSuccess(translatedPrefix -> prefixCache.put(language, translatedPrefix));
+    }
+
 
     private String concatOrderItems(final List<OrderItem> orderItems) {
         return orderItems.stream()
