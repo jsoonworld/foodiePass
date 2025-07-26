@@ -21,8 +21,9 @@ public class CurrencyController {
 
     private final CurrencyService currencyService;
 
-    public List<CurrencyResponse> getCurrencies() {
-        return currencyService.findAllCurrencies();
+    @GetMapping
+    public Mono<List<CurrencyResponse>> getCurrencies() {
+        return Mono.just(currencyService.findAllCurrencies());
     }
 
     @PostMapping("/calculate")
