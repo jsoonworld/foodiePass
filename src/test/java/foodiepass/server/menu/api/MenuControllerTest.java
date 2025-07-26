@@ -1,57 +1,67 @@
 package foodiepass.server.menu.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import foodiepass.server.menu.application.MenuService;
 import foodiepass.server.menu.dto.request.ReconfigureRequest;
 import foodiepass.server.menu.dto.response.ReconfigureResponse;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.FoodItemResponse;
+import foodiepass.server.menu.dto.response.ReconfigureResponse.PriceInfoResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(MenuController.class)
+@ExtendWith(MockitoExtension.class)
 class MenuControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient webTestClient;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
+    @Mock
     private MenuService menuService;
+
+    private MenuController menuController;
+
+    @BeforeEach
+    void setUp() {
+        menuController = new MenuController(menuService);
+        webTestClient = WebTestClient.bindToController(menuController).build();
+    }
+
 
     @Test
     @DisplayName("POST /menu/reconfigure 요청 시 메뉴 재구성 결과를 성공적으로 반환한다")
     void reconfigure_shouldReturnReconfiguredMenu() throws Exception {
         // given
         ReconfigureRequest request = new ReconfigureRequest(
-                "base64image", "Korean", "English", "South Korean Won", "US Dollar"
+                "base64image", "Korean", "English", "KRW", "USD"
         );
 
-        FoodItemResponse foodItemResponse = new FoodItemResponse("김치찌개", "Kimchi Stew", "Spicy stew", "image.jpg", null);
+        PriceInfoResponse priceInfo = new PriceInfoResponse("₩10,000", "$7.50");
+        FoodItemResponse foodItemResponse = new FoodItemResponse("김치찌개", "Kimchi Stew", "Spicy stew", "image.jpg", priceInfo);
         ReconfigureResponse mockResponse = new ReconfigureResponse(Collections.singletonList(foodItemResponse));
 
-        when(menuService.reconfigure(any(ReconfigureRequest.class))).thenReturn(mockResponse);
+        when(menuService.reconfigure(any(ReconfigureRequest.class)))
+                .thenReturn(Mono.just(mockResponse));
 
         // when & then
-        mockMvc.perform(post("/menu/reconfigure")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.results[0].originMenuName").value("김치찌개"))
-                .andExpect(jsonPath("$.result.results[0].translatedMenuName").value("Kimchi Stew"));
+        webTestClient.post().uri("/menu/reconfigure")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ReconfigureResponse.class)
+                .value(response -> {
+                    assert response.results().get(0).originMenuName().equals("김치찌개");
+                    assert response.results().get(0).translatedMenuName().equals("Kimchi Stew");
+                });
     }
 }

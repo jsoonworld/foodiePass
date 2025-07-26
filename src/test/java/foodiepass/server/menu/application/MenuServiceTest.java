@@ -2,6 +2,7 @@ package foodiepass.server.menu.application;
 
 import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
+import foodiepass.server.language.domain.Language;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -54,18 +56,26 @@ class MenuServiceTest {
         MenuItem menuItem1 = new MenuItem("김치찌개", new Price(Currency.SOUTH_KOREAN_WON, new BigDecimal("8000")), dummyFoodInfo);
         List<MenuItem> ocrResult = List.of(menuItem1);
 
-        FoodItemResponse enrichedItem1 = new FoodItemResponse("김치찌개", "Kimchi Stew", "Spicy stew", "kimchi.jpg", new PriceInfoResponse("₩8,000", "$6.00"));
+        PriceInfoResponse priceInfo = new PriceInfoResponse("₩8,000", "$6.00");
+        FoodItemResponse enrichedItem1 = new FoodItemResponse("김치찌개", "Kimchi Stew", "Spicy stew", "kimchi.jpg", priceInfo);
 
         // Mocking
         when(ocrReader.read(request.base64EncodedImage())).thenReturn(ocrResult);
-        when(menuItemEnricher.enrichAsync(eq(menuItem1), any(), any(), any(), any())).thenReturn(Mono.just(enrichedItem1));
+        when(menuItemEnricher.enrichAsync(eq(menuItem1), any(Language.class), any(Language.class), any(Currency.class), any(Currency.class)))
+                .thenReturn(Mono.just(enrichedItem1));
 
         // when
-        ReconfigureResponse response = menuService.reconfigure(request);
+        Mono<ReconfigureResponse> responseMono = menuService.reconfigure(request);
 
         // then
-        assertThat(response.results()).hasSize(1);
-        assertThat(response.results().get(0)).isEqualTo(enrichedItem1);
+        StepVerifier.create(responseMono)
+                .expectNextMatches(response -> {
+                    assertThat(response.results()).hasSize(1);
+                    assertThat(response.results().get(0).translatedMenuName()).isEqualTo("Kimchi Stew");
+                    assertThat(response.results().get(0).priceInfo().userPriceWithCurrencyUnit()).isEqualTo("$6.00");
+                    return true;
+                })
+                .verifyComplete();
 
         verify(ocrReader, times(1)).read(request.base64EncodedImage());
         verify(menuItemEnricher, times(1)).enrichAsync(any(), any(), any(), any(), any());
