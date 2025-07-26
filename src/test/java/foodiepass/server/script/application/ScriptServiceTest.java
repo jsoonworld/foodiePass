@@ -12,6 +12,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -53,18 +55,22 @@ class ScriptServiceTest {
         String localScript = "注文します\n1 キムチチゲ";
         Script mockScript = new Script(travelerScript, localScript);
 
-        when(scriptFactory.create(eq(KOREAN), eq(JAPANESE), any(List.class)))
-                .thenReturn(mockScript);
+        when(scriptFactory.createAsync(eq(KOREAN), eq(JAPANESE), any(List.class)))
+                .thenReturn(Mono.just(mockScript));
 
         // when
-        ScriptResponse response = scriptService.generateScript(request);
+        Mono<ScriptResponse> responseMono = scriptService.generateScript(request);
 
         // then
-        assertThat(response.travelerScript()).isEqualTo(travelerScript);
-        assertThat(response.localScript()).isEqualTo(localScript);
+        StepVerifier.create(responseMono)
+                .assertNext(response -> {
+                    assertThat(response.travelerScript()).isEqualTo(travelerScript);
+                    assertThat(response.localScript()).isEqualTo(localScript);
+                })
+                .verifyComplete();
 
         ArgumentCaptor<List<OrderItem>> orderItemsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(scriptFactory, times(1)).create(eq(KOREAN), eq(JAPANESE), orderItemsCaptor.capture());
+        verify(scriptFactory, times(1)).createAsync(eq(KOREAN), eq(JAPANESE), orderItemsCaptor.capture());
 
         List<OrderItem> capturedOrderItems = orderItemsCaptor.getValue();
         assertThat(capturedOrderItems).hasSize(1);

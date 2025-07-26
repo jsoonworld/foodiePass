@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,7 +18,7 @@ public class MenuController {
     private final MenuService menuService;
 
     @PostMapping("/reconfigure")
-    public ReconfigureResponse reconfigure(@RequestBody final ReconfigureRequest request) {
+    public Mono<ReconfigureResponse> reconfigure(@RequestBody final ReconfigureRequest request) {
         return menuService.reconfigure(request);
     }
 }

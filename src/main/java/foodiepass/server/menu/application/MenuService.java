@@ -6,9 +6,10 @@ import foodiepass.server.menu.application.port.out.OcrReader;
 import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.dto.request.ReconfigureRequest;
 import foodiepass.server.menu.dto.response.ReconfigureResponse;
-import foodiepass.server.menu.dto.response.ReconfigureResponse.FoodItemResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class MenuService {
     private final OcrReader ocrReader;
     private final MenuItemEnricher menuItemEnricher;
 
-    public ReconfigureResponse reconfigure(final ReconfigureRequest request) {
+    public Mono<ReconfigureResponse> reconfigure(final ReconfigureRequest request) {
         final Language originLanguage = Language.fromLanguageName(request.originLanguageName());
         final Language userLanguage = Language.fromLanguageName(request.userLanguageName());
         final Currency originCurrency = Currency.fromCurrencyName(request.originCurrencyName());
@@ -27,16 +28,15 @@ public class MenuService {
 
         final List<MenuItem> menuItems = ocrReader.read(request.base64EncodedImage());
 
-        final List<FoodItemResponse> foodItemResponses = menuItems.parallelStream()
-                .map(menuItem -> menuItemEnricher.enrichAsync(
+        return Flux.fromIterable(menuItems)
+                .flatMap(menuItem -> menuItemEnricher.enrichAsync(
                         menuItem,
                         originLanguage,
                         userLanguage,
                         originCurrency,
                         userCurrency
-                ).block())
-                .toList();
-
-        return new ReconfigureResponse(foodItemResponses);
+                ))
+                .collectList()
+                .map(ReconfigureResponse::new);
     }
 }

@@ -60,6 +60,19 @@ public class CurrencyService {
         return CalculatePriceResponse.of(originCurrency, originTotalPrice, userCurrency, userTotalPrice);
     }
 
+    public Mono<CalculatePriceResponse> calculateOrdersPriceAsync(final CalculatePriceRequest request) {
+        final Currency originCurrency = Currency.fromCurrencyName(request.originCurrency());
+        final Currency userCurrency = Currency.fromCurrencyName(request.userCurrency());
+        final BigDecimal originTotalPrice = calculateTotalPrice(request.orders());
+
+        return exchangeRateProvider.getExchangeRateAsync(originCurrency, userCurrency)
+                .map(exchangeRate -> {
+                    final BigDecimal userTotalPrice = originTotalPrice.multiply(BigDecimal.valueOf(exchangeRate))
+                            .setScale(2, RoundingMode.HALF_UP);
+                    return CalculatePriceResponse.of(originCurrency, originTotalPrice, userCurrency, userTotalPrice);
+                });
+    }
+
     private BigDecimal calculateTotalPrice(final List<OrderElementRequest> orderElementRequests) {
         return orderElementRequests.stream()
                 .map(order -> order.originPrice().multiply(order.quantity()))
