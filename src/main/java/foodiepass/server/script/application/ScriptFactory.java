@@ -32,15 +32,6 @@ public class ScriptFactory {
         prefixCache.put(ENGLISH, ENGLISH_SCRIPT_PREFIX);
     }
 
-    public Script create(final Language sourceLanguage, final Language targetLanguage, final List<OrderItem> orderItems) {
-        final String prefix = getOrTranslatePrefix(sourceLanguage);
-        final String concatenatedOrders = concatOrderItems(orderItems);
-        final String travelerScript = prefix + lineSeparator() + concatenatedOrders;
-        final String localScript = translationClient.translate(sourceLanguage, targetLanguage, travelerScript);
-
-        return new Script(travelerScript, localScript);
-    }
-
     public Mono<Script> createAsync(final Language sourceLanguage, final Language targetLanguage, final List<OrderItem> orderItems) {
         return getOrTranslatePrefixAsync(sourceLanguage)
                 .flatMap(prefix -> {
@@ -52,13 +43,6 @@ public class ScriptFactory {
                 });
     }
 
-    private String getOrTranslatePrefix(final Language language) {
-        return prefixCache.computeIfAbsent(
-                language,
-                lang -> translationClient.translate(ENGLISH, lang, ENGLISH_SCRIPT_PREFIX)
-        );
-    }
-
     private Mono<String> getOrTranslatePrefixAsync(final Language language) {
         if (prefixCache.containsKey(language)) {
             return Mono.just(prefixCache.get(language));
@@ -66,7 +50,6 @@ public class ScriptFactory {
         return translationClient.translateAsync(ENGLISH, language, ENGLISH_SCRIPT_PREFIX)
                 .doOnSuccess(translatedPrefix -> prefixCache.put(language, translatedPrefix));
     }
-
 
     private String concatOrderItems(final List<OrderItem> orderItems) {
         return orderItems.stream()

@@ -17,7 +17,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Profile("!test")
+@Profile("!test & !performance-test")
 public class GeminiOcrReader implements OcrReader {
 
     public static final String JSON_EXTRACT_PROMPT_MESSAGE = "Given a menu image, please extract and print the names and prices of the food items in JSON format. Follow the structure below for each item:\n\n[{\"name\": \"Name of the Food (String)\", \"price\": Price of the Food (double)}, ...]";

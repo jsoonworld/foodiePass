@@ -6,6 +6,7 @@ import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.TasteAtlasApiClient;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.TasteAtlasPageParser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
+@Profile("!performance-test")
 @RequiredArgsConstructor
 public class UrlFoodScrapper implements FoodScrapper {
 

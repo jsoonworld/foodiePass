@@ -7,6 +7,7 @@ import foodiepass.server.menu.infra.exception.ScrapingException;
 import foodiepass.server.menu.infra.scraper.auth.domain.Authenticatable;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
+@Profile("!performance-test")
 public class TasteAtlasApiClient implements Authenticatable {
 
     private final WebClient webClient;

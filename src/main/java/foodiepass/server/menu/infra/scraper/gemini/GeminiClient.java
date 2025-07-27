@@ -9,12 +9,14 @@ import com.google.protobuf.ByteString;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Optional;
 
 @Component
+@Profile("!performance-test")
 public class GeminiClient {
 
     private final GenerativeModel multimodalModel;
