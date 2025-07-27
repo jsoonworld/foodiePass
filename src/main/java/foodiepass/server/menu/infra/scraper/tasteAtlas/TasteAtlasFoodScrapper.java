@@ -1,5 +1,6 @@
 package foodiepass.server.menu.infra.scraper.tasteAtlas;
 
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.config.TasteAtlasProperties;
@@ -21,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component("tasteAtlasFoodScrapper")
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
 public class TasteAtlasFoodScrapper implements FoodScrapper {
 

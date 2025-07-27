@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class TranslationConfig {
 
     @Bean

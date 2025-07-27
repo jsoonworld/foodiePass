@@ -3,6 +3,7 @@ package foodiepass.server.language.infra;
 import com.google.cloud.translate.Translate;
 import com.google.cloud.translate.TranslateException;
 import com.google.cloud.translate.Translation;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.language.exception.LanguageErrorCode;
 import foodiepass.server.language.exception.LanguageException;
@@ -24,7 +25,7 @@ import static com.google.cloud.translate.Translate.TranslateOption.sourceLanguag
 import static com.google.cloud.translate.Translate.TranslateOption.targetLanguage;
 
 @Component
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class GoogleTranslationClient implements TranslationClient {
 
     private final Translate translate;

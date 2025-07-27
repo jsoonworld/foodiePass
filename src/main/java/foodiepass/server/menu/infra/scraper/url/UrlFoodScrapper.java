@@ -1,5 +1,6 @@
 package foodiepass.server.menu.infra.scraper.url;
 
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.config.TasteAtlasProperties;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
 public class UrlFoodScrapper implements FoodScrapper {
 

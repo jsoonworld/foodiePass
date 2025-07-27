@@ -14,7 +14,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 
 @Configuration
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class GoogleCloudConfig {
 
     @Bean

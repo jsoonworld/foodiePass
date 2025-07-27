@@ -1,6 +1,7 @@
 package foodiepass.server.menu.infra.scraper.tasteAtlas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@Profile("!performance-test")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class TasteAtlasApiClient implements Authenticatable {
 
     private final WebClient webClient;

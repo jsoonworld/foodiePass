@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.ByteString;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Profile("!test & !performance-test")
+@Profile(ProfileConstants.NOT_TEST_AND_NOT_PERFORMANCE_TEST)
 public class GeminiOcrReader implements OcrReader {
 
     public static final String JSON_EXTRACT_PROMPT_MESSAGE = "Given a menu image, please extract and print the names and prices of the food items in JSON format. Follow the structure below for each item:\n\n[{\"name\": \"Name of the Food (String)\", \"price\": Price of the Food (double)}, ...]";
