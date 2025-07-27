@@ -6,15 +6,18 @@ import com.google.cloud.vertexai.generativeai.ContentMaker;
 import com.google.cloud.vertexai.generativeai.GenerativeModel;
 import com.google.cloud.vertexai.generativeai.PartMaker;
 import com.google.protobuf.ByteString;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Optional;
 
 @Component
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class GeminiClient {
 
     private final GenerativeModel multimodalModel;

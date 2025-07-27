@@ -2,11 +2,14 @@ package foodiepass.server.menu.infra.scraper.gemini;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,7 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+@Component("geminiFoodScrapper")
+@Primary
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
 public class GeminiFoodScrapper implements FoodScrapper {
 

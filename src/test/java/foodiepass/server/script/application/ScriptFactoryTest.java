@@ -1,10 +1,10 @@
 package foodiepass.server.script.application;
 
 import foodiepass.server.common.price.domain.Price;
+import foodiepass.server.language.domain.Language;
 import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
-import foodiepass.server.language.domain.Language;
 import foodiepass.server.order.domain.OrderItem;
 import foodiepass.server.script.domain.Script;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,19 +15,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
-import static foodiepass.server.language.domain.Language.ENGLISH;
-import static foodiepass.server.language.domain.Language.JAPANESE;
-import static foodiepass.server.language.domain.Language.KOREAN;
+import static foodiepass.server.language.domain.Language.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ScriptFactory 클래스")
 class ScriptFactoryTest {
 
     @InjectMocks
@@ -60,33 +63,36 @@ class ScriptFactoryTest {
     }
 
     @Nested
-    @DisplayName("스크립트 생성 시")
-    class CreateScript {
-
+    @DisplayName("createAsync 메소드는")
+    class CreateAsync {
         @Test
         @DisplayName("캐시에 없는 언어는 접두사와 전체 스크립트를 모두 번역한다")
         void createScript_withCacheMiss() {
             // given
             final Language sourceLanguage = KOREAN;
             final Language targetLanguage = JAPANESE;
-            final String koreanPrefix = "주문할게요";
-            final String travelerScript = koreanPrefix + "\n" + "1 Kimchi Jjigae\n2 Bibimbap";
+            final String travelerScriptPrefix = "주문할게요";
+            final String travelerScript = travelerScriptPrefix + "\n" + "1 Kimchi Jjigae\n2 Bibimbap";
             final String localScript = "注文します\n1 キムチチゲ\n2 ビビンバ";
 
-            when(translationClient.translate(eq(ENGLISH), eq(sourceLanguage), eq("Hello I want to order")))
-                    .thenReturn(koreanPrefix);
-            when(translationClient.translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
-                    .thenReturn(localScript);
+            when(translationClient.translateAsync(eq(ENGLISH), eq(sourceLanguage), anyString()))
+                    .thenReturn(Mono.just(travelerScriptPrefix));
+            when(translationClient.translateAsync(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
+                    .thenReturn(Mono.just(localScript));
 
             // when
-            Script result = scriptFactory.create(sourceLanguage, targetLanguage, orderItems);
+            Mono<Script> resultMono = scriptFactory.createAsync(sourceLanguage, targetLanguage, orderItems);
 
             // then
-            assertThat(result.getTravelerScript()).isEqualTo(travelerScript);
-            assertThat(result.getLocalScript()).isEqualTo(localScript);
+            StepVerifier.create(resultMono)
+                    .assertNext(script -> {
+                        assertThat(script.getTravelerScript()).isEqualTo(travelerScript);
+                        assertThat(script.getLocalScript()).isEqualTo(localScript);
+                    })
+                    .verifyComplete();
 
-            verify(translationClient, times(1)).translate(eq(ENGLISH), eq(sourceLanguage), eq("Hello I want to order"));
-            verify(translationClient, times(1)).translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript));
+            verify(translationClient, times(1)).translateAsync(eq(ENGLISH), eq(sourceLanguage), anyString());
+            verify(translationClient, times(1)).translateAsync(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript));
         }
 
         @Test
@@ -95,27 +101,25 @@ class ScriptFactoryTest {
             // given
             final Language sourceLanguage = KOREAN;
             final Language targetLanguage = JAPANESE;
-            final String koreanPrefix = "주문할게요";
-            final String travelerScript = koreanPrefix + "\n" + "1 Kimchi Jjigae\n2 Bibimbap";
-            final String firstLocalScript = "첫번째 번역 결과...";
-            final String secondLocalScript = "두번째 번역 결과...";
+            final String travelerScriptPrefix = "주문할게요";
+            final String travelerScript = travelerScriptPrefix + "\n" + "1 Kimchi Jjigae\n2 Bibimbap";
+            final String localScript = "注文します\n1 キムチチゲ\n2 ビビンバ";
 
-            when(translationClient.translate(eq(ENGLISH), eq(sourceLanguage), eq("Hello I want to order")))
-                    .thenReturn(koreanPrefix);
-            when(translationClient.translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
-                    .thenReturn(firstLocalScript, secondLocalScript);
+            when(translationClient.translateAsync(eq(ENGLISH), eq(sourceLanguage), anyString()))
+                    .thenReturn(Mono.just(travelerScriptPrefix));
+            when(translationClient.translateAsync(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
+                    .thenReturn(Mono.just(localScript));
 
-            // when: 첫 번째 호출 (캐시 저장)
-            scriptFactory.create(sourceLanguage, targetLanguage, orderItems);
-            // when: 두 번째 호출 (캐시 사용)
-            Script result = scriptFactory.create(sourceLanguage, targetLanguage, orderItems);
+            // when
+            scriptFactory.createAsync(sourceLanguage, targetLanguage, orderItems).block();
+
+            // when
+            Mono<Script> resultMono = scriptFactory.createAsync(sourceLanguage, targetLanguage, orderItems);
 
             // then
-            assertThat(result.getTravelerScript()).isEqualTo(travelerScript);
-            assertThat(result.getLocalScript()).isEqualTo(secondLocalScript);
+            StepVerifier.create(resultMono).expectNextCount(1).verifyComplete();
 
-            verify(translationClient, times(1)).translate(eq(ENGLISH), eq(sourceLanguage), eq("Hello I want to order"));
-            verify(translationClient, times(2)).translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript));
+            verify(translationClient, times(1)).translateAsync(eq(ENGLISH), eq(sourceLanguage), anyString());
         }
 
         @Test
@@ -127,17 +131,17 @@ class ScriptFactoryTest {
             final String travelerScript = "Hello I want to order\n1 Kimchi Jjigae\n2 Bibimbap";
             final String localScript = "こんにちは、注文したいです...";
 
-            when(translationClient.translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
-                    .thenReturn(localScript);
+            when(translationClient.translateAsync(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript)))
+                    .thenReturn(Mono.just(localScript));
 
             // when
-            Script result = scriptFactory.create(sourceLanguage, targetLanguage, orderItems);
+            Mono<Script> resultMono = scriptFactory.createAsync(sourceLanguage, targetLanguage, orderItems);
 
             // then
-            assertThat(result.getTravelerScript()).isEqualTo(travelerScript);
-            assertThat(result.getLocalScript()).isEqualTo(localScript);
+            StepVerifier.create(resultMono).expectNextCount(1).verifyComplete();
 
-            verify(translationClient, times(1)).translate(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript));
+            verify(translationClient, never()).translateAsync(eq(ENGLISH), eq(sourceLanguage), anyString());
+            verify(translationClient, times(1)).translateAsync(eq(sourceLanguage), eq(targetLanguage), eq(travelerScript));
         }
     }
 }

@@ -10,7 +10,6 @@ import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.FoodItemResponse;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.PriceInfoResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +26,7 @@ public class MenuItemEnricher {
     private static final Language ENGLISH = Language.fromLanguageName("English");
 
     public MenuItemEnricher(
-            @Qualifier("tasteAtlasFoodScrapper") FoodScrapper foodScraper,
+            FoodScrapper foodScraper,
             TranslationClient translationClient,
             CurrencyService currencyService
     ) {

@@ -1,12 +1,14 @@
 package foodiepass.server.menu.infra.scraper.tasteAtlas;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
 import foodiepass.server.menu.infra.scraper.auth.domain.Authenticatable;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class TasteAtlasApiClient implements Authenticatable {
 
     private final WebClient webClient;

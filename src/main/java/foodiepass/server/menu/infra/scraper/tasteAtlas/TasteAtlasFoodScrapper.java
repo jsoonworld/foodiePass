@@ -1,11 +1,13 @@
 package foodiepass.server.menu.infra.scraper.tasteAtlas;
 
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -20,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component("tasteAtlasFoodScrapper")
+@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
 public class TasteAtlasFoodScrapper implements FoodScrapper {
 
