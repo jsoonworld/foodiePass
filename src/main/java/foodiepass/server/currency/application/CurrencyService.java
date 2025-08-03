@@ -6,7 +6,7 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest;
 import foodiepass.server.currency.dto.request.CalculatePriceRequest.OrderElementRequest;
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
-import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
+import foodiepass.server.currency.exception.CurrencyException;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.PriceInfoResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,11 +18,13 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static foodiepass.server.currency.exception.CurrencyErrorCode.EXCHANGE_RATE_NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 public class CurrencyService {
 
-    private final ExchangeRateProvider exchangeRateProvider;
+    private final ExchangeRateCache exchangeRateCache;
 
     public List<CurrencyResponse> findAllCurrencies() {
         return Stream.of(Currency.values())
@@ -33,31 +35,19 @@ public class CurrencyService {
     public Mono<PriceInfoResponse> convertAndFormatAsync(final Price originPrice, final Currency userCurrency) {
         final Currency originCurrency = originPrice.getCurrency();
 
-        return exchangeRateProvider.getExchangeRateAsync(originCurrency, userCurrency)
-                .map(exchangeRate -> {
-                    final BigDecimal userPriceValue = originPrice.getAmount()
-                            .multiply(BigDecimal.valueOf(exchangeRate))
-                            .setScale(2, RoundingMode.HALF_UP);
+        return Mono.fromSupplier(() -> {
+            double exchangeRate = exchangeRateCache.getExchangeRate(originCurrency.getCurrencyCode(), userCurrency.getCurrencyCode())
+                    .orElseThrow(() -> new CurrencyException(EXCHANGE_RATE_NOT_FOUND));
 
-                    final String originFormatted = formatPrice(originPrice.getAmount(), originCurrency);
-                    final String userFormatted = formatPrice(userPriceValue, userCurrency);
+            final BigDecimal userPriceValue = originPrice.getAmount()
+                    .multiply(BigDecimal.valueOf(exchangeRate))
+                    .setScale(2, RoundingMode.HALF_UP);
 
-                    return new PriceInfoResponse(originFormatted, userFormatted);
-                });
-    }
+            final String originFormatted = formatPrice(originPrice.getAmount(), originCurrency);
+            final String userFormatted = formatPrice(userPriceValue, userCurrency);
 
-    public CalculatePriceResponse calculateOrdersPrice(final CalculatePriceRequest request) {
-        final Currency originCurrency = Currency.fromCurrencyName(request.originCurrency());
-        final Currency userCurrency = Currency.fromCurrencyName(request.userCurrency());
-
-        final BigDecimal originTotalPrice = calculateTotalPrice(request.orders());
-
-        final double exchangeRate = exchangeRateProvider.getExchangeRate(originCurrency, userCurrency);
-
-        final BigDecimal userTotalPrice = originTotalPrice.multiply(BigDecimal.valueOf(exchangeRate))
-                .setScale(2, RoundingMode.HALF_UP);
-
-        return CalculatePriceResponse.of(originCurrency, originTotalPrice, userCurrency, userTotalPrice);
+            return new PriceInfoResponse(originFormatted, userFormatted);
+        });
     }
 
     public Mono<CalculatePriceResponse> calculateOrdersPriceAsync(final CalculatePriceRequest request) {
@@ -65,12 +55,15 @@ public class CurrencyService {
         final Currency userCurrency = Currency.fromCurrencyName(request.userCurrency());
         final BigDecimal originTotalPrice = calculateTotalPrice(request.orders());
 
-        return exchangeRateProvider.getExchangeRateAsync(originCurrency, userCurrency)
-                .map(exchangeRate -> {
-                    final BigDecimal userTotalPrice = originTotalPrice.multiply(BigDecimal.valueOf(exchangeRate))
-                            .setScale(2, RoundingMode.HALF_UP);
-                    return CalculatePriceResponse.of(originCurrency, originTotalPrice, userCurrency, userTotalPrice);
-                });
+        return Mono.fromSupplier(() -> {
+            double exchangeRate = exchangeRateCache.getExchangeRate(originCurrency.getCurrencyCode(), userCurrency.getCurrencyCode())
+                    .orElseThrow(() -> new CurrencyException(EXCHANGE_RATE_NOT_FOUND));
+
+            final BigDecimal userTotalPrice = originTotalPrice.multiply(BigDecimal.valueOf(exchangeRate))
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            return CalculatePriceResponse.of(originCurrency, originTotalPrice, userCurrency, userTotalPrice);
+        });
     }
 
     private BigDecimal calculateTotalPrice(final List<OrderElementRequest> orderElementRequests) {
