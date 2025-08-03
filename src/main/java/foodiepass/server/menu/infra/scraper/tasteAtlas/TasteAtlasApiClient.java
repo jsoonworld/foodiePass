@@ -7,6 +7,7 @@ import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
 import foodiepass.server.menu.infra.scraper.auth.domain.Authenticatable;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker; 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,7 @@ public class TasteAtlasApiClient implements Authenticatable {
         this.authToken = token;
     }
 
+    @CircuitBreaker(name = "tasteAtlas", fallbackMethod = "fallbackSearch")
     public Mono<TasteAtlasResponse> search(String foodName) {
         String searchQuery = String.format(properties.api().url(), foodName.replace(" ", "+"));
 
@@ -49,6 +51,7 @@ public class TasteAtlasApiClient implements Authenticatable {
                 .onErrorMap(e -> !(e instanceof ScrapingException), e -> new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_API_REQUEST_FAILED));
     }
 
+    @CircuitBreaker(name = "tasteAtlas", fallbackMethod = "fallbackFetchHtml")
     public Mono<String> fetchHtml(final String url) {
         return WebClient.create().get()
                 .uri(url)
@@ -63,5 +66,15 @@ public class TasteAtlasApiClient implements Authenticatable {
         } catch (Exception e) {
             return Mono.error(new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_JSON_PARSING_FAILED));
         }
+    }
+
+    public Mono<TasteAtlasResponse> fallbackSearch(String foodName, Throwable t) {
+        log.warn("Circuit Breaker is open for TasteAtlas search. foodName: {}. error: {}", foodName, t.getMessage());
+        return Mono.empty();
+    }
+
+    public Mono<String> fallbackFetchHtml(final String url, Throwable t) {
+        log.warn("Circuit Breaker is open for TasteAtlas fetchHtml. url: {}. error: {}", url, t.getMessage());
+        return Mono.empty();
     }
 }
