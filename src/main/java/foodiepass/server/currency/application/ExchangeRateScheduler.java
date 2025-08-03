@@ -21,8 +21,16 @@ public class ExchangeRateScheduler {
     private final ExchangeRateCache exchangeRateCache;
 
     @PostConstruct
+    public void initializeCacheOnStartup() {
+        updateAllExchangeRatesInternal();
+    }
+
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
-    public void updateAllExchangeRates() {
+    public void scheduledCacheUpdate() {
+        updateAllExchangeRatesInternal();
+    }
+
+    private void updateAllExchangeRatesInternal() {
         log.info("환율 정보 캐시 갱신 작업을 시작합니다...");
 
         final Currency baseCurrency = Currency.UNITED_STATES_DOLLAR;
@@ -64,6 +72,9 @@ public class ExchangeRateScheduler {
 
                     log.info("총 {}개의 통화에 대한 환율 캐시 갱신을 완료했습니다.", ratesMap.size());
                 })
-                .subscribe();
+                .subscribe(
+                        null,
+                        error -> log.error("환율 정보 캐시 갱신 스트림에 치명적인 오류가 발생했습니다.", error)
+                );
     }
 }

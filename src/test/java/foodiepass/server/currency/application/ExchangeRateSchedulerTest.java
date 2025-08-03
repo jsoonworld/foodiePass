@@ -30,12 +30,11 @@ class ExchangeRateSchedulerTest {
     private ExchangeRateCache exchangeRateCache;
 
     @Test
-    @DisplayName("updateAllExchangeRates 호출 시 환율을 가져와 캐시를 올바르게 업데이트한다")
-    void shouldUpdateCacheWithFetchedRates() {
+    @DisplayName("초기화 메소드 호출 시 환율을 가져와 캐시를 올바르게 업데이트한다")
+    void initializeCacheOnStartup_shouldFetchRatesAndCorrectlyUpdateCache() {
         // given
         given(exchangeRateProvider.getExchangeRateAsync(any(Currency.class), any(Currency.class)))
                 .willAnswer(invocation -> {
-                    Currency base = invocation.getArgument(0);
                     Currency target = invocation.getArgument(1);
 
                     if (target.equals(Currency.SOUTH_KOREAN_WON)) {
@@ -48,7 +47,7 @@ class ExchangeRateSchedulerTest {
                 });
 
         // when
-        exchangeRateScheduler.updateAllExchangeRates();
+        exchangeRateScheduler.initializeCacheOnStartup();
 
         // then
         ArgumentCaptor<String> fromCaptor = ArgumentCaptor.forClass(String.class);

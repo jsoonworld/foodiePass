@@ -13,12 +13,16 @@ public class ExchangeRateCache {
         if (fromCurrencyCode.equals(toCurrencyCode)) {
             return Optional.of(1.0);
         }
-        String key = fromCurrencyCode + "-" + toCurrencyCode;
+        String key = generateKey(fromCurrencyCode, toCurrencyCode);
         return Optional.ofNullable(exchangeRateCache.get(key));
     }
 
     public void updateExchangeRate(String fromCurrencyCode, String toCurrencyCode, double rate) {
-        String key = fromCurrencyCode + "-" + toCurrencyCode;
+        String key = generateKey(fromCurrencyCode, toCurrencyCode);
         exchangeRateCache.put(key, rate);
+    }
+
+    private String generateKey(String fromCurrencyCode, String toCurrencyCode) {
+        return fromCurrencyCode + "-" + toCurrencyCode;
     }
 }
