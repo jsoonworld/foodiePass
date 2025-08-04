@@ -43,6 +43,10 @@ dependencies {
 	implementation 'org.jsoup:jsoup:1.17.2'
 	implementation 'org.seleniumhq.selenium:selenium-java:4.22.0'
 
+	// ShedLock 의존성 추가
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.14.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.14.0'
+
 	// Utils
 	implementation 'org.apache.commons:commons-text:1.12.0'
 
