@@ -9,6 +9,8 @@ import com.google.protobuf.ByteString;
 import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class GeminiClient {
@@ -35,6 +38,7 @@ public class GeminiClient {
         this.responseParser = responseParser;
     }
 
+    @CircuitBreaker(name = "gemini", fallbackMethod = "fallbackGenerateText")
     public String generateText(final String prompt) {
         try {
             final GenerateContentResponse apiResponse = textModel.generateContent(ContentMaker.fromString(prompt));
@@ -44,6 +48,7 @@ public class GeminiClient {
         }
     }
 
+    @CircuitBreaker(name = "gemini", fallbackMethod = "fallbackGenerateTextWithImage")
     public String generateText(final ByteString imageBytes, final String mimeType, final String prompt) {
         try {
             final GenerateContentResponse apiResponse = multimodalModel.generateContent(
@@ -67,5 +72,15 @@ public class GeminiClient {
                 .orElseThrow(() -> new GeminiException(GeminiErrorCode.INVALID_GEMINI_RESPONSE));
 
         return responseParser.parse(extractedText);
+    }
+
+    public String fallbackGenerateText(final String prompt, final Throwable t) {
+        log.warn("Circuit Breaker is open for Gemini text generation. error: {}", t.getMessage());
+        throw new GeminiException(GeminiErrorCode.EXTERNAL_API_CIRCUIT_OPEN);
+    }
+
+    public String fallbackGenerateTextWithImage(final ByteString imageBytes, final String mimeType, final String prompt, final Throwable t) {
+        log.warn("Circuit Breaker is open for Gemini multimodal generation. error: {}", t.getMessage());
+        throw new GeminiException(GeminiErrorCode.EXTERNAL_API_CIRCUIT_OPEN);
     }
 }

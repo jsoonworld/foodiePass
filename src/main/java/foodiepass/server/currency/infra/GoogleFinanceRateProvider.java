@@ -4,6 +4,8 @@ import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,6 +17,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class GoogleFinanceRateProvider implements ExchangeRateProvider {
 
@@ -30,6 +33,7 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
 
     @Override
     @Cacheable(value = "exchangeRates", key = "#from.currencyCode + '::' + #to.currencyCode")
+    @CircuitBreaker(name = "exchangeRate", fallbackMethod = "fallbackGetExchangeRate")
     public double getExchangeRate(final Currency from, final Currency to) {
         if (from.equals(to)) {
             return 1.0;
@@ -59,5 +63,10 @@ public class GoogleFinanceRateProvider implements ExchangeRateProvider {
     public Mono<Double> getExchangeRateAsync(final Currency from, final Currency to) {
         return Mono.fromCallable(() -> getExchangeRate(from, to))
                 .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public double fallbackGetExchangeRate(final Currency from, final Currency to, final Throwable t) {
+        log.warn("Circuit Breaker is open for getExchangeRate. from: {}, to: {}. error: {}", from.getCurrencyCode(), to.getCurrencyCode(), t.getMessage());
+        throw new ScrapingException(ScrapingErrorCode.EXTERNAL_API_CIRCUIT_OPEN);
     }
 }
