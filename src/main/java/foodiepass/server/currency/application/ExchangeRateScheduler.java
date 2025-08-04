@@ -5,6 +5,7 @@ import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,11 +27,12 @@ public class ExchangeRateScheduler {
     }
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+    @SchedulerLock(name = "updateAllExchangeRates", lockAtLeastFor = "PT5M", lockAtMostFor = "PT1H")
     public void scheduledCacheUpdate() {
         updateAllExchangeRatesInternal();
     }
 
-    private void updateAllExchangeRatesInternal() {
+    void updateAllExchangeRatesInternal() {
         log.info("환율 정보 캐시 갱신 작업을 시작합니다...");
 
         final Currency baseCurrency = Currency.UNITED_STATES_DOLLAR;
