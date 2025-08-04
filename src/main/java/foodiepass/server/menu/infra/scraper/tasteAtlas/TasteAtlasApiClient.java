@@ -7,7 +7,7 @@ import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
 import foodiepass.server.menu.infra.exception.ScrapingException;
 import foodiepass.server.menu.infra.scraper.auth.domain.Authenticatable;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker; 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
@@ -70,11 +70,11 @@ public class TasteAtlasApiClient implements Authenticatable {
 
     public Mono<TasteAtlasResponse> fallbackSearch(String foodName, Throwable t) {
         log.warn("Circuit Breaker is open for TasteAtlas search. foodName: {}. error: {}", foodName, t.getMessage());
-        return Mono.empty();
+        return Mono.error(new ScrapingException(ScrapingErrorCode.EXTERNAL_API_CIRCUIT_OPEN));
     }
 
     public Mono<String> fallbackFetchHtml(final String url, Throwable t) {
         log.warn("Circuit Breaker is open for TasteAtlas fetchHtml. url: {}. error: {}", url, t.getMessage());
-        return Mono.empty();
+        return Mono.error(new ScrapingException(ScrapingErrorCode.EXTERNAL_API_CIRCUIT_OPEN));
     }
 }

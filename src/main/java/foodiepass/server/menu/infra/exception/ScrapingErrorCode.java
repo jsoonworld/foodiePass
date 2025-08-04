@@ -17,8 +17,7 @@ public enum ScrapingErrorCode implements ErrorCode {
     TASTE_ATLAS_HTML_FETCH_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TasteAtlas HTML 페이지를 가져오는 데 실패했습니다."),
     TASTE_ATLAS_NO_RESULT(HttpStatus.NOT_FOUND, "TasteAtlas 검색 결과가 없습니다."),
 
-    EXTERNAL_API_CIRCUIT_OPEN(HttpStatus.SERVICE_UNAVAILABLE, "외부 API 서킷이 열려 요청을 처리할 수 없습니다."),
-    ;
+    EXTERNAL_API_CIRCUIT_OPEN(HttpStatus.SERVICE_UNAVAILABLE, "외부 API 서킷이 열려 요청을 처리할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
