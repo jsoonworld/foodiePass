@@ -1,5 +1,7 @@
 # FoodiePass 🌮🍜🌍
 
+<img width="100%" alt="Adobe Express - foodiepass-시연영상 (1)" src="https://github.com/user-attachments/assets/73cc8fb6-793a-4c89-a05b-8a809fe7b068">
+
 > **Scan, See, Taste. Instantly understand any foreign menu with translations, currency conversion, and food photos.**
 
 FoodiePass is designed for every traveler who has ever hesitated to order from a menu in a foreign language. It's more than just a translator; it's a visual guide to your next great meal. Simply take a picture of the menu, and our OCR technology will serve you a fully understandable menu with translations, converted prices, and pictures of the dishes.
