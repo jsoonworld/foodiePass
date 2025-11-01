@@ -1,5 +1,8 @@
 # FoodiePass 🌮🍜🌍
 
+> **📌 This repository is now in v2 development. Looking for the original prototype?**
+> Check out [v1.0.0 Release](https://github.com/jsoonworld/foodiePass/releases/tag/v1.0.0) or [legacy-v1 branch](https://github.com/jsoonworld/foodiePass/tree/legacy-v1)
+
 <img width="100%" alt="Adobe Express - foodiepass-시연영상 (1)" src="https://github.com/user-attachments/assets/73cc8fb6-793a-4c89-a05b-8a809fe7b068">
 
 > **Scan, See, Taste. Instantly understand any foreign menu with translations, currency conversion, and food photos.**
