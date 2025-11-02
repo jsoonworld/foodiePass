@@ -24,13 +24,30 @@ foodiePass/
 
 ## 🚀 Quick Start
 
-### Backend
+### Option 1: Using Scripts (Recommended)
+
+From the project root:
+
 ```bash
-cd backend
-./gradlew bootRun
+# Start backend server
+./scripts/dev-backend.sh
+
+# Run tests
+./scripts/test-backend.sh
+
+# Build project
+./scripts/build-backend.sh
 ```
 
-### Frontend
+### Option 2: Manual Commands
+
+#### Backend
+```bash
+cd backend
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
+#### Frontend (once set up)
 ```bash
 cd frontend
 npm install
