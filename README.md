@@ -63,7 +63,7 @@ For detailed setup instructions, see:
 - [1-Pager](./docs/1-PAGER.md) - Project vision and goals
 - [PRD](./docs/PRD.md) - Product requirements
 - [Tech Spec](./docs/TECH_SPEC.md) - Technical architecture
-- [API Contract](./docs/API_CONTRACT.md) - Frontend-Backend API specification
+- [API Contract](./docs/API_CONTRACT.md) _(TBD)_ - Frontend-Backend API specification
 
 ## Core Features
 
@@ -79,7 +79,7 @@ For detailed setup instructions, see:
 ### Backend
 - **Framework**: Spring Boot 3.5.3
 - **Language**: Java 21
-- **Database**: H2 (dev), PostgreSQL (prod)
+- **Database**: H2 (dev), MySQL (prod)
 - **External APIs**:
   - Google Cloud (Vertex AI, Translation)
   - TasteAtlas (food images)

@@ -6,7 +6,7 @@ Spring Boot REST API server for FoodiePass application.
 
 - **Framework**: Spring Boot 3.5.3
 - **Language**: Java 21
-- **Database**: H2 (development), PostgreSQL (production)
+- **Database**: H2 (development), MySQL (production)
 - **Build Tool**: Gradle 8.x
 
 ## Prerequisites
@@ -98,7 +98,7 @@ Create `src/main/resources/application-local.yml` for local development:
 
 ## API Endpoints
 
-See [API Contract](../docs/API_CONTRACT.md) for detailed API documentation.
+See [API Contract](../docs/API_CONTRACT.md) _(TBD)_ for detailed API documentation.
 
 ## Development
 
@@ -123,4 +123,4 @@ See [API Contract](../docs/API_CONTRACT.md) for detailed API documentation.
 
 - [Project README](../README.md)
 - [Technical Specification](../docs/TECH_SPEC.md)
-- [API Contract](../docs/API_CONTRACT.md)
+- [API Contract](../docs/API_CONTRACT.md) _(TBD)_

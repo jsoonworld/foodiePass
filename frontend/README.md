@@ -75,7 +75,7 @@ frontend/
 
 ## API Integration
 
-The frontend communicates with the backend API. See [API Contract](../docs/API_CONTRACT.md) for endpoint specifications.
+The frontend communicates with the backend API. See [API Contract](../docs/API_CONTRACT.md) _(TBD)_ for endpoint specifications.
 
 ### API Client Setup (Planned)
 
@@ -117,4 +117,4 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 
 - [Project README](../README.md)
 - [Technical Specification](../docs/TECH_SPEC.md)
-- [API Contract](../docs/API_CONTRACT.md)
+- [API Contract](../docs/API_CONTRACT.md) _(TBD)_

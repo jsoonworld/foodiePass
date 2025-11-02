@@ -609,7 +609,7 @@ Day 8: 데이터 분석 및 결과 정리
 
 - [1-Pager](./1-PAGER.md) - 프로젝트 개요
 - [Tech Spec](./TECH_SPEC.md) - 기술 아키텍처 상세
-- [API Contract](./API_CONTRACT.md) - Frontend-Backend API 명세
+- [API Contract](./API_CONTRACT.md) _(TBD)_ - Frontend-Backend API 명세
 
 ---
 

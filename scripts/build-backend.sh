@@ -2,7 +2,8 @@
 
 # FoodiePass Backend Build Script
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 echo "Building FoodiePass Backend..."
-cd backend && ./gradlew clean build
+cd backend || exit 1
+./gradlew clean build
