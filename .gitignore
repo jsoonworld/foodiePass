@@ -28,16 +28,54 @@ nbdist/
 
 
 # ===============================================================
-# Build & Dependencies (빌드 및 의존성 관련)
+# Backend (Spring Boot)
 # ===============================================================
 
 ### Gradle ###
-.gradle/
-build/
+backend/.gradle/
+backend/build/
+backend/out/
 
 # Gradle Wrapper는 제외하지 않음
-!gradle/wrapper/gradle-wrapper.jar
-!gradle-wrapper.properties
+!backend/gradle/wrapper/gradle-wrapper.jar
+!backend/gradle-wrapper.properties
+
+
+# ===============================================================
+# Frontend (Node.js)
+# ===============================================================
+
+### Node ###
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+### Environment ###
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+### Build artifacts ###
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+### Testing ###
+frontend/coverage/
+frontend/.nyc_output/
+
+
+# ===============================================================
+# Build & Dependencies (빌드 및 의존성 관련)
+# ===============================================================
+
+### General Build ###
+.gradle/
+build/
 
 
 # ===============================================================
