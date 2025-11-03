@@ -122,5 +122,8 @@ See [API Contract](../docs/API_CONTRACT.md) _(TBD)_ for detailed API documentati
 ## Related Documentation
 
 - [Project README](../README.md)
-- [Technical Specification](../docs/TECH_SPEC.md)
-- [API Contract](../docs/API_CONTRACT.md) _(TBD)_
+- [1-Pager](../docs/1-PAGER.md) - 프로젝트 비전 및 가설
+- [PRD](../docs/PRD.md) - 가설 검증 요구사항 명세
+- [Technical Specification](../docs/TECH_SPEC.md) - 기술 아키텍처
+- [Implementation Plan](./docs/IMPLEMENTATION_PLAN.md) - 백엔드 구현 계획 (Phase 3-4)
+- [Backend CLAUDE.md](./.claude/CLAUDE.md) - 백엔드 컨텍스트
