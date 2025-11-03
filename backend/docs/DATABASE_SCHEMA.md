@@ -18,9 +18,10 @@
 
 | 테이블명 | 설명 | 상태 |
 |---|---|---|
-| `menu_scans` | 메뉴 스캔 세션 | ➕ 신규 |
-| `menu_items` | 메뉴 아이템 | 🔧 수정 (FK 추가) |
+| `menu_scans` | 메뉴 스캔 세션 (메뉴 아이템 JSON 포함) | ➕ 신규 |
 | `survey_responses` | 설문 응답 | ➕ 신규 |
+
+**참고**: MenuItem은 JPA Entity가 아닌 Value Object입니다. 메뉴 아이템 정보는 `menu_scans.menu_items_json` 컬럼에 JSON 형태로 저장됩니다.
 
 ---
 
@@ -43,6 +44,8 @@ CREATE TABLE menu_scans (
     source_currency VARCHAR(3) COMMENT '소스 화폐',
     target_currency VARCHAR(3) NOT NULL COMMENT '타겟 화폐 (사용자 선택)',
 
+    menu_items_json TEXT COMMENT '메뉴 아이템 리스트 (JSON)',
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
 
     INDEX idx_session_id (session_id),
@@ -63,6 +66,7 @@ CREATE TABLE menu_scans (
 | `target_language` | VARCHAR(10) | NOT NULL | 타겟 언어 코드 (예: 'ko', 'en', 'ja') |
 | `source_currency` | VARCHAR(3) | NULL | 소스 화폐 코드 (예: 'USD', 'EUR') |
 | `target_currency` | VARCHAR(3) | NOT NULL | 타겟 화폐 코드 (예: 'KRW', 'USD') |
+| `menu_items_json` | TEXT | NULL | 메뉴 아이템 리스트 (JSON 배열 형태) |
 | `created_at` | TIMESTAMP | NOT NULL | 스캔 생성 시각 |
 
 **인덱스**:
@@ -72,58 +76,7 @@ CREATE TABLE menu_scans (
 
 ---
 
-### 2. menu_items (수정)
-
-**목적**: 메뉴 아이템 정보 (OCR + 번역 + 음식 정보 + 환율)
-
-**변경사항**: `scan_id` FK 추가
-
-```sql
-CREATE TABLE menu_items (
-    id VARCHAR(36) PRIMARY KEY COMMENT 'UUID',
-    scan_id VARCHAR(36) NOT NULL COMMENT 'FK to menu_scans',
-
-    original_name VARCHAR(255) NOT NULL COMMENT '원어 메뉴명',
-    translated_name VARCHAR(255) COMMENT '번역된 메뉴명',
-
-    original_price DECIMAL(10, 2) COMMENT '원래 가격',
-    converted_price DECIMAL(10, 2) COMMENT '변환된 가격',
-
-    food_image_url VARCHAR(512) COMMENT '음식 사진 URL (Treatment 그룹만)',
-    food_description TEXT COMMENT '음식 설명 (Treatment 그룹만)',
-    match_confidence FLOAT COMMENT '매칭 신뢰도 (0-1, Treatment 그룹만)',
-
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
-
-    FOREIGN KEY (scan_id) REFERENCES menu_scans(id) ON DELETE CASCADE,
-    INDEX idx_scan_id (scan_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='메뉴 아이템';
-```
-
-**컬럼 설명**:
-
-| 컬럼명 | 타입 | Null | 설명 |
-|---|---|---|---|
-| `id` | VARCHAR(36) | NOT NULL | UUID (Primary Key) |
-| `scan_id` | VARCHAR(36) | NOT NULL | FK to `menu_scans` |
-| `original_name` | VARCHAR(255) | NOT NULL | OCR로 추출한 원어 메뉴명 |
-| `translated_name` | VARCHAR(255) | NULL | 번역된 메뉴명 |
-| `original_price` | DECIMAL(10, 2) | NULL | OCR로 추출한 원래 가격 |
-| `converted_price` | DECIMAL(10, 2) | NULL | 환율 변환된 가격 |
-| `food_image_url` | VARCHAR(512) | NULL | 음식 사진 URL (Treatment 그룹만) |
-| `food_description` | TEXT | NULL | 음식 설명 (Treatment 그룹만) |
-| `match_confidence` | FLOAT | NULL | 음식 매칭 신뢰도 (0-1, Treatment 그룹만) |
-| `created_at` | TIMESTAMP | NOT NULL | 아이템 생성 시각 |
-
-**인덱스**:
-- `idx_scan_id`: 스캔별 아이템 조회 최적화
-
-**제약 조건**:
-- FK `scan_id` → `menu_scans(id)` (CASCADE DELETE)
-
----
-
-### 3. survey_responses (신규)
+### 2. survey_responses (신규)
 
 **목적**: 확신도 설문 응답 저장
 
@@ -181,28 +134,24 @@ CREATE TABLE survey_responses (
 │ target_language  │
 │ source_currency  │
 │ target_currency  │
+│ menu_items_json  │ ← JSON 배열로 MenuItem 저장
 │ created_at       │
 └──────────────────┘
          │
-         │ 1:N
-         ├────────────────────────────┐
-         │                            │
-         ↓                            ↓
-┌──────────────────┐         ┌──────────────────┐
-│   menu_items     │         │ survey_responses │
-├──────────────────┤         ├──────────────────┤
-│ id (PK)          │         │ id (PK)          │
-│ scan_id (FK)     │         │ scan_id (FK,UK)  │
-│ original_name    │         │ ab_group         │
-│ translated_name  │         │ has_confidence   │
-│ original_price   │         │ created_at       │
-│ converted_price  │         └──────────────────┘
-│ food_image_url   │
-│ food_description │
-│ match_confidence │
+         │ 1:1
+         ↓
+┌──────────────────┐
+│ survey_responses │
+├──────────────────┤
+│ id (PK)          │
+│ scan_id (FK,UK)  │
+│ ab_group         │
+│ has_confidence   │
 │ created_at       │
 └──────────────────┘
 ```
+
+**참고**: MenuItem은 별도 테이블이 아닌 Value Object로, `menu_items_json` 컬럼에 JSON 배열로 저장됩니다.
 
 ---
 
@@ -227,6 +176,7 @@ CREATE TABLE menu_scans (
     target_language VARCHAR(10) NOT NULL COMMENT '타겟 언어 (사용자 선택)',
     source_currency VARCHAR(3) COMMENT '소스 화폐',
     target_currency VARCHAR(3) NOT NULL COMMENT '타겟 화폐 (사용자 선택)',
+    menu_items_json TEXT COMMENT '메뉴 아이템 리스트 (JSON)',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '생성 시각',
     INDEX idx_session_id (session_id),
     INDEX idx_ab_group (ab_group),
@@ -246,12 +196,6 @@ CREATE TABLE survey_responses (
     INDEX idx_created_at (created_at),
     UNIQUE KEY uk_scan_id (scan_id) COMMENT '중복 응답 방지'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='설문 응답';
-
--- menu_items 테이블 수정 (scan_id FK 추가)
-ALTER TABLE menu_items
-    ADD COLUMN scan_id VARCHAR(36) AFTER id,
-    ADD FOREIGN KEY (scan_id) REFERENCES menu_scans(id) ON DELETE CASCADE,
-    ADD INDEX idx_scan_id (scan_id);
 ```
 
 ---
@@ -290,8 +234,8 @@ public class MenuScan {
     @Column(name = "target_currency", nullable = false, length = 3)
     private String targetCurrency;
 
-    @OneToMany(mappedBy = "scan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MenuItem> items = new ArrayList<>();
+    @Column(name = "menu_items_json", columnDefinition = "TEXT")
+    private String menuItemsJson;  // JSON 문자열
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -305,60 +249,26 @@ public class MenuScan {
             createdAt = LocalDateTime.now();
         }
     }
-}
-```
 
----
+    // Helper methods for JSON serialization/deserialization
+    // ObjectMapper를 주입받아 사용
+    public void setMenuItems(List<MenuItem> items, ObjectMapper objectMapper) throws JsonProcessingException {
+        this.menuItemsJson = objectMapper.writeValueAsString(items);
+    }
 
-### MenuItem Entity
-
-```java
-@Entity
-@Table(name = "menu_items")
-public class MenuItem {
-    @Id
-    @Column(length = 36)
-    private String id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "scan_id", nullable = false)
-    private MenuScan scan;
-
-    @Column(name = "original_name", nullable = false)
-    private String originalName;
-
-    @Column(name = "translated_name")
-    private String translatedName;
-
-    @Column(name = "original_price", precision = 10, scale = 2)
-    private BigDecimal originalPrice;
-
-    @Column(name = "converted_price", precision = 10, scale = 2)
-    private BigDecimal convertedPrice;
-
-    @Column(name = "food_image_url", length = 512)
-    private String foodImageUrl;
-
-    @Column(name = "food_description", columnDefinition = "TEXT")
-    private String foodDescription;
-
-    @Column(name = "match_confidence")
-    private Float matchConfidence;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (id == null) {
-            id = UUID.randomUUID().toString();
+    public List<MenuItem> getMenuItems(ObjectMapper objectMapper) throws JsonProcessingException {
+        if (menuItemsJson == null || menuItemsJson.isEmpty()) {
+            return Collections.emptyList();
         }
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
+        return objectMapper.readValue(menuItemsJson, new TypeReference<List<MenuItem>>() {});
     }
 }
 ```
+
+**참고**:
+- MenuItem은 **Value Object**로, 별도 테이블이 없습니다.
+- 메뉴 아이템 리스트는 `menuItemsJson` 필드에 JSON 배열로 저장됩니다.
+- Jackson ObjectMapper를 사용하여 직렬화/역직렬화를 수행합니다.
 
 ---
 
@@ -446,7 +356,6 @@ FROM
 | 세션별 스캔 조회 | `idx_session_id` | 사용자별 스캔 히스토리 |
 | A/B 그룹별 집계 | `idx_ab_group` | 그룹별 통계 분석 |
 | 날짜 범위 조회 | `idx_created_at` | 기간별 데이터 분석 |
-| 스캔별 아이템 조회 | `idx_scan_id` (menu_items) | 메뉴 아이템 로딩 |
 | 중복 응답 방지 | `uk_scan_id` (survey_responses) | 응답 유니크 제약 |
 
 ---
@@ -455,8 +364,7 @@ FROM
 
 | 테이블 | 보관 기간 | 정책 |
 |---|---|---|
-| `menu_scans` | 6개월 | 6개월 후 아카이브 또는 삭제 |
-| `menu_items` | 6개월 | CASCADE DELETE (scan 삭제 시) |
+| `menu_scans` | 6개월 | 6개월 후 아카이브 또는 삭제 (menu_items_json 포함) |
 | `survey_responses` | 6개월 | CASCADE DELETE (scan 삭제 시) |
 
 ---

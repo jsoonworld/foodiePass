@@ -35,11 +35,11 @@ Cookie: JSESSIONID=<session-id>
 **Request Body**:
 ```json
 {
-  "image": "base64 encoded image string",
-  "sourceLanguage": "auto",           // Optional, default: "auto"
-  "targetLanguage": "ko",              // Required
-  "sourceCurrency": "USD",             // Optional, auto-detect 가능
-  "targetCurrency": "KRW"              // Required
+  "base64EncodedImage": "base64 encoded image string",
+  "originLanguageName": "English",     // Optional, default: "auto"
+  "userLanguageName": "Korean",        // Required
+  "originCurrencyName": "USD Dollar",  // Optional, auto-detect 가능
+  "userCurrencyName": "KRW Won"        // Required
 }
 ```
 
@@ -47,11 +47,13 @@ Cookie: JSESSIONID=<session-id>
 
 | 필드 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| `image` | String (Base64) | Y | 메뉴판 이미지 (Base64 인코딩) |
-| `sourceLanguage` | String | N | 소스 언어 코드 (기본값: "auto") |
-| `targetLanguage` | String | Y | 타겟 언어 코드 (예: "ko", "en", "ja") |
-| `sourceCurrency` | String | N | 소스 화폐 코드 (기본값: auto-detect) |
-| `targetCurrency` | String | Y | 타겟 화폐 코드 (예: "KRW", "USD", "JPY") |
+| `base64EncodedImage` | String (Base64) | Y | 메뉴판 이미지 (Base64 인코딩) |
+| `originLanguageName` | String | N | 원본 언어명 (예: "English", "auto") |
+| `userLanguageName` | String | Y | 사용자 언어명 (예: "Korean", "English", "Japanese") |
+| `originCurrencyName` | String | N | 원본 화폐명 (예: "USD Dollar", auto-detect 가능) |
+| `userCurrencyName` | String | Y | 사용자 화폐명 (예: "KRW Won", "USD Dollar", "JPY Yen") |
+
+**참고**: 기존 v1 API와의 호환성을 위해 언어/화폐 필드명은 ReconfigureRequest와 동일하게 유지됩니다.
 
 ---
 
@@ -411,7 +413,7 @@ Authorization: Bearer <admin-token>
 
 ```javascript
 // 1. 메뉴 스캔
-async function scanMenu(imageBase64, targetLanguage, targetCurrency) {
+async function scanMenu(imageBase64, userLanguageName, userCurrencyName) {
   const response = await fetch('http://localhost:8080/api/menus/scan', {
     method: 'POST',
     headers: {
@@ -419,9 +421,9 @@ async function scanMenu(imageBase64, targetLanguage, targetCurrency) {
     },
     credentials: 'include', // 세션 쿠키 포함
     body: JSON.stringify({
-      image: imageBase64,
-      targetLanguage: targetLanguage,
-      targetCurrency: targetCurrency,
+      base64EncodedImage: imageBase64,
+      userLanguageName: userLanguageName,
+      userCurrencyName: userCurrencyName,
     }),
   });
 
@@ -453,7 +455,7 @@ async function submitSurvey(scanId, hasConfidence) {
 }
 
 // 사용 예시
-const result = await scanMenu(imageBase64, 'ko', 'KRW');
+const result = await scanMenu(imageBase64, 'Korean', 'KRW Won');
 console.log('A/B Group:', result.abGroup);
 console.log('Items:', result.items);
 
@@ -474,11 +476,11 @@ const api = axios.create({
 
 // 타입 정의
 interface MenuScanRequest {
-  image: string;
-  sourceLanguage?: string;
-  targetLanguage: string;
-  sourceCurrency?: string;
-  targetCurrency: string;
+  base64EncodedImage: string;
+  originLanguageName?: string;
+  userLanguageName: string;
+  originCurrencyName?: string;
+  userCurrencyName: string;
 }
 
 interface MenuScanResponse {

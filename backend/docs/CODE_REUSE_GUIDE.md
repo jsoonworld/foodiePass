@@ -37,38 +37,149 @@ public ReconfigureResponse reconfigure(ReconfigureRequest request) {
 ```java
 @Service
 public class MenuService {
+    private final ABTestService abTestService;
+    private final MenuScanRepository menuScanRepository;
+    private final ObjectMapper objectMapper;  // JSON 직렬화용
+
     // 기존 메서드 유지
-    public ReconfigureResponse reconfigure(ReconfigureRequest request) {
+    public Mono<ReconfigureResponse> reconfigure(ReconfigureRequest request) {
         // 기존 로직 유지
     }
 
     // 새 메서드 추가
-    public MenuScanResponse scanMenu(MenuScanRequest request, String sessionId) {
+    public Mono<MenuScanResponse> scanMenu(MenuScanRequest request, String sessionId) {
+        long startTime = System.currentTimeMillis();
+
         // 1. A/B 그룹 배정
-        ABGroup group = abTestService.getOrAssignGroup(sessionId);
+        ABGroup group = abTestService.assignGroup(sessionId);
 
-        // 2. 기존 reconfigure 호출
-        ReconfigureResponse response = reconfigure(toReconfigureRequest(request));
+        // 2. MenuScanRequest → ReconfigureRequest 변환
+        ReconfigureRequest reconfigureRequest = toReconfigureRequest(request);
 
-        // 3. Treatment 그룹만 음식 매칭
-        if (group == ABGroup.TREATMENT) {
-            // 이미 reconfigure에서 처리됨
-        } else {
-            // Control 그룹은 FoodInfo 제거
-            response.getItems().forEach(item -> {
-                item.setFoodImageUrl(null);
-                item.setFoodDescription(null);
-                item.setMatchConfidence(null);
+        // 3. 기존 reconfigure 호출 (비동기)
+        return reconfigure(reconfigureRequest)
+            .map(response -> {
+                // 4. Control 그룹은 FoodInfo 제거
+                if (group == ABGroup.CONTROL) {
+                    response = removeFoodInfo(response);
+                }
+
+                // 5. 처리 시간 계산
+                double processingTime = (System.currentTimeMillis() - startTime) / 1000.0;
+
+                // 6. MenuScan 저장
+                MenuScan scan = createAndSaveMenuScan(
+                    sessionId, group, request, response, processingTime
+                );
+
+                // 7. 응답 생성
+                return toMenuScanResponse(scan, response, processingTime);
             });
+    }
+
+    // === Helper Methods (새로 추가) ===
+
+    /**
+     * MenuScanRequest → ReconfigureRequest 변환
+     */
+    private ReconfigureRequest toReconfigureRequest(MenuScanRequest request) {
+        return new ReconfigureRequest(
+            request.base64EncodedImage(),
+            request.originLanguageName(),
+            request.userLanguageName(),
+            request.originCurrencyName(),
+            request.userCurrencyName()
+        );
+    }
+
+    /**
+     * Control 그룹용: FoodInfo 제거
+     */
+    private ReconfigureResponse removeFoodInfo(ReconfigureResponse response) {
+        List<FoodItemResponse> controlItems = response.results().stream()
+            .map(item -> new FoodItemResponse(
+                item.originMenuName(),
+                item.translatedMenuName(),
+                null,  // description 제거
+                null,  // image 제거
+                item.priceInfo()
+            ))
+            .toList();
+
+        return new ReconfigureResponse(controlItems);
+    }
+
+    /**
+     * MenuScan 생성 및 저장
+     */
+    private MenuScan createAndSaveMenuScan(
+        String sessionId,
+        ABGroup abGroup,
+        MenuScanRequest request,
+        ReconfigureResponse response,
+        double processingTime
+    ) {
+        try {
+            // MenuItem 리스트를 JSON으로 직렬화
+            String menuItemsJson = objectMapper.writeValueAsString(response.results());
+
+            MenuScan scan = MenuScan.create(
+                sessionId,
+                abGroup,
+                null,  // imageUrl (필요시 S3 업로드)
+                request.originLanguageName(),
+                request.userLanguageName(),
+                request.originCurrencyName(),
+                request.userCurrencyName()
+            );
+
+            // JSON 설정
+            scan.setMenuItemsJson(menuItemsJson);
+
+            return menuScanRepository.save(scan);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize menu items", e);
         }
+    }
 
-        // 4. MenuScan 저장
-        MenuScan scan = createMenuScan(request, group, response);
-        menuScanRepository.save(scan);
-
-        return toMenuScanResponse(scan, response);
+    /**
+     * MenuScanResponse 생성
+     */
+    private MenuScanResponse toMenuScanResponse(
+        MenuScan scan,
+        ReconfigureResponse response,
+        double processingTime
+    ) {
+        return new MenuScanResponse(
+            scan.getId(),
+            scan.getAbGroup(),
+            response.results(),
+            processingTime
+        );
     }
 }
+```
+
+**추가 DTO**:
+```java
+// MenuScanRequest.java
+public record MenuScanRequest(
+    String base64EncodedImage,
+    String originLanguageName,
+    String userLanguageName,
+    String originCurrencyName,
+    String userCurrencyName
+) {
+    // ReconfigureRequest와 동일한 구조
+}
+
+// MenuScanResponse.java
+public record MenuScanResponse(
+    UUID scanId,
+    ABGroup abGroup,
+    List<FoodItemResponse> items,
+    double processingTime
+) {}
 ```
 
 ---

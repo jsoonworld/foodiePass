@@ -75,61 +75,96 @@
 
 ### 기존 도메인 (v1 재사용)
 
-#### MenuItem
+#### MenuItem (Value Object)
 ```java
-@Entity
+/**
+ * MenuItem은 JPA Entity가 아닌 Value Object입니다.
+ * 데이터베이스에 별도 테이블로 저장되지 않으며,
+ * MenuScan의 menu_items_json 컬럼에 JSON 배열로 직렬화됩니다.
+ */
 public class MenuItem {
-    @Id
-    private UUID id;
+    private final String name;        // 메뉴명
+    private final Price price;        // 가격 (Value Object)
+    private final FoodInfo foodInfo;  // 음식 정보 (Value Object)
 
-    // OCR 추출 정보
-    private String originalName;      // 원어 메뉴명
-    private BigDecimal originalPrice; // 원래 가격
-
-    // 번역 정보
-    private String translatedName;    // 번역된 메뉴명
-
-    // 환율 변환 정보
-    private BigDecimal convertedPrice; // 변환된 가격
-
-    // 음식 매칭 정보 (Treatment 그룹만)
-    private String foodImageUrl;      // 음식 사진 URL
-    private String foodDescription;   // 음식 설명
-    private Float matchConfidence;    // 매칭 신뢰도 (0-1)
+    public MenuItem(String name, Price price, FoodInfo foodInfo) {
+        this.name = name;
+        this.price = price;
+        this.foodInfo = foodInfo;
+    }
 }
 ```
+
+**참고**:
+- MenuItem은 **불변(immutable) Value Object**입니다.
+- 데이터베이스 테이블이 없으며, ID도 없습니다.
+- MenuScan에 JSON으로 저장되어 함께 관리됩니다.
 
 ---
 
 ### 새 도메인 (v2 추가)
 
-#### MenuScan
+#### MenuScan (Entity)
 ```java
 @Entity
+@Table(name = "menu_scans")
 public class MenuScan {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     // A/B 테스트 정보
-    private String sessionId;         // 사용자 세션 ID
+    @Column(name = "session_id", nullable = false)
+    private String sessionId;         // 사용자 세션 ID (Spring Session ID)
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ab_group", nullable = false)
     private ABGroup abGroup;          // A/B 그룹 (CONTROL | TREATMENT)
 
     // 메뉴판 정보
+    @Column(name = "image_url")
     private String imageUrl;          // S3 업로드 이미지 URL
 
     // 언어/화폐 정보
+    @Column(name = "source_language")
     private String sourceLanguage;    // 소스 언어 (auto-detect)
+
+    @Column(name = "target_language", nullable = false)
     private String targetLanguage;    // 타겟 언어 (사용자 선택)
+
+    @Column(name = "source_currency")
     private String sourceCurrency;    // 소스 화폐
+
+    @Column(name = "target_currency", nullable = false)
     private String targetCurrency;    // 타겟 화폐
 
-    // 메뉴 아이템
-    @OneToMany(mappedBy = "scan")
-    private List<MenuItem> items;     // 메뉴 아이템 리스트
+    // 메뉴 아이템 (JSON 저장)
+    @Column(name = "menu_items_json", columnDefinition = "TEXT")
+    private String menuItemsJson;     // MenuItem 리스트를 JSON으로 직렬화
 
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    // Transient helper method (데이터베이스에 저장되지 않음)
+    @Transient
+    public List<MenuItem> getMenuItems(ObjectMapper objectMapper) throws JsonProcessingException {
+        if (menuItemsJson == null || menuItemsJson.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return objectMapper.readValue(menuItemsJson, new TypeReference<List<MenuItem>>() {});
+    }
+
+    @Transient
+    public void setMenuItems(List<MenuItem> items, ObjectMapper objectMapper) throws JsonProcessingException {
+        this.menuItemsJson = objectMapper.writeValueAsString(items);
+    }
 }
 ```
+
+**참고**:
+- MenuItem은 별도 테이블이 아닌 JSON으로 저장됩니다.
+- `menuItemsJson` 필드는 TEXT 타입으로, JSON 배열 문자열을 저장합니다.
+- Helper 메서드를 통해 JSON ↔ List<MenuItem> 변환을 수행합니다.
 
 #### ABGroup (Enum)
 ```java
