@@ -50,21 +50,9 @@ public class MenuScan {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Creates a new MenuScan instance.
-     *
-     * @param userId User session identifier
-     * @param abGroup A/B test group assignment
-     * @param imageUrl Optional image URL for audit
-     * @param sourceLanguage Source language code
-     * @param targetLanguage Target language code
-     * @param sourceCurrency Source currency code
-     * @param targetCurrency Target currency code
-     * @throws IllegalArgumentException if userId or abGroup is null/empty
-     */
-    public MenuScan(String userId, ABGroup abGroup, String imageUrl,
-                    String sourceLanguage, String targetLanguage,
-                    String sourceCurrency, String targetCurrency) {
+    private MenuScan(String userId, ABGroup abGroup, String imageUrl,
+                     String sourceLanguage, String targetLanguage,
+                     String sourceCurrency, String targetCurrency) {
         validateUserId(userId);
         validateABGroup(abGroup);
 
@@ -77,6 +65,26 @@ public class MenuScan {
         this.sourceCurrency = sourceCurrency;
         this.targetCurrency = targetCurrency;
         this.createdAt = LocalDateTime.now();
+    }
+
+    /**
+     * Factory method to create a new MenuScan instance.
+     *
+     * @param userId User session identifier
+     * @param abGroup A/B test group assignment
+     * @param imageUrl Optional image URL for audit
+     * @param sourceLanguage Source language code
+     * @param targetLanguage Target language code
+     * @param sourceCurrency Source currency code
+     * @param targetCurrency Target currency code
+     * @return New MenuScan instance
+     * @throws IllegalArgumentException if userId or abGroup is null/empty
+     */
+    public static MenuScan create(String userId, ABGroup abGroup, String imageUrl,
+                                   String sourceLanguage, String targetLanguage,
+                                   String sourceCurrency, String targetCurrency) {
+        return new MenuScan(userId, abGroup, imageUrl, sourceLanguage, targetLanguage,
+                sourceCurrency, targetCurrency);
     }
 
     private void validateUserId(String userId) {

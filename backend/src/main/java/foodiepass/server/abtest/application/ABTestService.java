@@ -1,0 +1,94 @@
+package foodiepass.server.abtest.application;
+
+import foodiepass.server.abtest.domain.ABGroup;
+import foodiepass.server.abtest.domain.MenuScan;
+import foodiepass.server.abtest.dto.response.ABTestResult;
+import foodiepass.server.abtest.repository.MenuScanRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * Service for managing A/B test group assignments and analytics
+ */
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ABTestService {
+
+    private final MenuScanRepository menuScanRepository;
+
+    /**
+     * Assigns a user to an A/B test group.
+     * - New users: Random assignment (50:50)
+     * - Existing users: Maintain previous group
+     *
+     * @param userId User session identifier
+     * @return Assigned ABGroup
+     */
+    public ABGroup assignGroup(String userId) {
+        Optional<MenuScan> existingScan = menuScanRepository
+            .findFirstByUserIdOrderByCreatedAtDesc(userId);
+
+        if (existingScan.isPresent()) {
+            return existingScan.get().getAbGroup();
+        }
+
+        return randomAssign();
+    }
+
+    /**
+     * Creates and saves a new MenuScan record
+     *
+     * @param userId User session identifier
+     * @param abGroup A/B test group assignment
+     * @param imageUrl Optional image URL for audit
+     * @param sourceLanguage Source language code
+     * @param targetLanguage Target language code
+     * @param sourceCurrency Source currency code
+     * @param targetCurrency Target currency code
+     * @return Saved MenuScan instance
+     */
+    @Transactional
+    public MenuScan createScan(
+        String userId,
+        ABGroup abGroup,
+        String imageUrl,
+        String sourceLanguage,
+        String targetLanguage,
+        String sourceCurrency,
+        String targetCurrency
+    ) {
+        MenuScan scan = MenuScan.create(
+            userId, abGroup, imageUrl,
+            sourceLanguage, targetLanguage,
+            sourceCurrency, targetCurrency
+        );
+
+        return menuScanRepository.save(scan);
+    }
+
+    /**
+     * Retrieves A/B test results summary (admin only)
+     *
+     * @return ABTestResult with group counts
+     */
+    public ABTestResult getResults() {
+        long controlCount = menuScanRepository.countByAbGroup(ABGroup.CONTROL);
+        long treatmentCount = menuScanRepository.countByAbGroup(ABGroup.TREATMENT);
+
+        return new ABTestResult(controlCount, treatmentCount);
+    }
+
+    /**
+     * Random group assignment (50:50)
+     */
+    private ABGroup randomAssign() {
+        return ThreadLocalRandom.current().nextBoolean()
+            ? ABGroup.CONTROL
+            : ABGroup.TREATMENT;
+    }
+}
