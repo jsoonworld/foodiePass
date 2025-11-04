@@ -19,26 +19,48 @@
 ```
 foodiePass/
 ├── backend/          # Spring Boot 3.5.3, Java 21
-├── frontend/         # React/Next.js (TBD)
-├── docs/            # Project documentation
-│   ├── 1-PAGER.md   # 프로젝트 비전 및 가설
-│   ├── PRD.md       # 가설 검증 계획서
-│   └── TECH_SPEC.md # 기술 아키텍처
-├── scripts/         # Development scripts
-└── .claude/         # AI assistant context
+│   ├── docs/        # 백엔드 전용 문서
+│   │   ├── HYPOTHESES.md         # 가설 요약
+│   │   ├── ARCHITECTURE.md       # 아키텍처
+│   │   ├── API_SPEC.md          # API 명세
+│   │   ├── DATABASE_SCHEMA.md   # DB 스키마
+│   │   ├── CODE_REUSE_GUIDE.md  # v1 재사용 가이드
+│   │   └── IMPLEMENTATION_PLAN.md # 구현 계획
+│   └── .claude/     # 백엔드 AI 컨텍스트
+│
+├── frontend/        # React/Next.js
+│   ├── docs/       # 프론트엔드 전용 문서
+│   │   ├── HYPOTHESES.md         # 가설 요약
+│   │   ├── API_INTEGRATION.md    # API 연동
+│   │   ├── COMPONENT_DESIGN.md   # 컴포넌트 설계
+│   │   ├── USER_FLOW.md         # 사용자 플로우
+│   │   └── UI_REQUIREMENTS.md   # UI/UX 요구사항
+│   └── .claude/    # 프론트엔드 AI 컨텍스트
+│
+├── docs/           # 프로젝트 공통 문서
+│   ├── 1-PAGER.md  # 프로젝트 비전 및 가설
+│   └── PRD.md      # 가설 검증 계획서
+│
+├── scripts/        # Development scripts
+└── .claude/        # 루트 AI 컨텍스트
 ```
 
 ## Quick Links
 
-### Documentation
+### 프로젝트 공통 문서
 - [1-Pager](../docs/1-PAGER.md) - 프로젝트 비전, 핵심 가설, MVP 실험 설계
 - [PRD](../docs/PRD.md) - 가설 검증 중심 요구사항 명세
-- [TECH_SPEC](../docs/TECH_SPEC.md) - 기존 코드 분석 및 v2 아키텍처
 - [Project README](../README.md) - Monorepo 개요
 
-### Codebase
+### 백엔드 문서
+- [Backend CLAUDE.md](../backend/.claude/CLAUDE.md) - 백엔드 AI 컨텍스트
 - [Backend README](../backend/README.md) - 백엔드 설정 및 실행
-- [Frontend README](../frontend/README.md) - 프론트엔드 (TBD)
+- [Backend docs/](../backend/docs/) - 백엔드 전용 문서들
+
+### 프론트엔드 문서
+- [Frontend CLAUDE.md](../frontend/.claude/CLAUDE.md) - 프론트엔드 AI 컨텍스트
+- [Frontend README](../frontend/README.md) - 프론트엔드 설정 및 실행 (TBD)
+- [Frontend docs/](../frontend/docs/) - 프론트엔드 전용 문서들
 
 ## Core Hypotheses
 
