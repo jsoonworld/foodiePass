@@ -27,6 +27,17 @@ public class ABTestService {
      * New users are randomly assigned 50:50 to CONTROL or TREATMENT.
      * Existing users maintain their previous group assignment for consistency.
      *
+     * <p><b>Usage:</b> This method should be called within the same transaction as
+     * {@link #createScan} to ensure atomicity. The typical usage pattern is:
+     * <pre>{@code
+     * @Transactional
+     * public void handleMenuScan(String userId, ...) {
+     *     ABGroup group = abTestService.assignGroup(userId);
+     *     MenuScan scan = abTestService.createScan(userId, group, ...);
+     *     // proceed with menu processing
+     * }
+     * }</pre>
+     *
      * @param userId User session identifier
      * @return Assigned A/B group (CONTROL or TREATMENT)
      */
