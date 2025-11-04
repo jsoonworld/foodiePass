@@ -65,6 +65,18 @@ public class MenuScan {
     public MenuScan(String userId, ABGroup abGroup, String imageUrl,
                     String sourceLanguage, String targetLanguage,
                     String sourceCurrency, String targetCurrency) {
+        this(userId, abGroup, imageUrl, sourceLanguage, targetLanguage,
+             sourceCurrency, targetCurrency, LocalDateTime.now());
+    }
+
+    /**
+     * Package-private constructor for testing purposes.
+     * Allows explicit timestamp setting to avoid flaky tests with Thread.sleep.
+     */
+    MenuScan(String userId, ABGroup abGroup, String imageUrl,
+             String sourceLanguage, String targetLanguage,
+             String sourceCurrency, String targetCurrency,
+             LocalDateTime createdAt) {
         validateUserId(userId);
         validateABGroup(abGroup);
 
@@ -76,7 +88,32 @@ public class MenuScan {
         this.targetLanguage = targetLanguage;
         this.sourceCurrency = sourceCurrency;
         this.targetCurrency = targetCurrency;
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = createdAt;
+    }
+
+    /**
+     * Factory method for testing purposes.
+     * Creates a MenuScan with explicit timestamp to avoid Thread.sleep in tests.
+     *
+     * <p><b>WARNING:</b> This method should only be used in tests.
+     * Production code should use the standard constructor.
+     *
+     * @param userId User session identifier
+     * @param abGroup A/B test group assignment
+     * @param imageUrl Optional image URL for audit
+     * @param sourceLanguage Source language code
+     * @param targetLanguage Target language code
+     * @param sourceCurrency Source currency code
+     * @param targetCurrency Target currency code
+     * @param createdAt Explicit creation timestamp
+     * @return MenuScan instance with specified timestamp
+     */
+    public static MenuScan forTest(String userId, ABGroup abGroup, String imageUrl,
+                                    String sourceLanguage, String targetLanguage,
+                                    String sourceCurrency, String targetCurrency,
+                                    LocalDateTime createdAt) {
+        return new MenuScan(userId, abGroup, imageUrl, sourceLanguage, targetLanguage,
+                            sourceCurrency, targetCurrency, createdAt);
     }
 
     private void validateUserId(String userId) {

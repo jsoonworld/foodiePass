@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,15 +44,15 @@ class MenuScanRepositoryTest {
 
     @Test
     @DisplayName("userId로 가장 최근 스캔을 조회할 수 있다")
-    void findFirstByUserIdOrderByCreatedAtDesc() throws InterruptedException {
+    void findFirstByUserIdOrderByCreatedAtDesc() {
         // Given
         String userId = "user-123";
-        MenuScan scan1 = new MenuScan(userId, ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
+        LocalDateTime now = LocalDateTime.now();
+
+        MenuScan scan1 = MenuScan.forTest(userId, ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW", now.minusMinutes(10));
         menuScanRepository.save(scan1);
 
-        Thread.sleep(10); // 시간 차이 보장
-
-        MenuScan scan2 = new MenuScan(userId, ABGroup.TREATMENT, null, "ja", "ko", "JPY", "KRW");
+        MenuScan scan2 = MenuScan.forTest(userId, ABGroup.TREATMENT, null, "ja", "ko", "JPY", "KRW", now);
         menuScanRepository.save(scan2);
 
         // When
