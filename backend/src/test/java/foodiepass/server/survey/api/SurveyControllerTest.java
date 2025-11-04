@@ -168,7 +168,7 @@ class SurveyControllerTest {
                 .andExpect(jsonPath("$.treatment.total").value(0))
                 .andExpect(jsonPath("$.treatment.yesCount").value(0))
                 .andExpect(jsonPath("$.treatment.yesRate").value(0.0))
-                .andExpect(jsonPath("$.ratio").isEmpty());
+                .andExpect(jsonPath("$.ratio").doesNotExist());
 
         verify(surveyService).getAnalytics();
     }

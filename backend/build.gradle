@@ -66,7 +66,6 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
-	ignoreFailures = true
 	finalizedBy jacocoTestReport
 }
 

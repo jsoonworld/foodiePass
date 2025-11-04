@@ -69,6 +69,10 @@ public class SurveyController {
      *
      * <p>Admin-only endpoint for monitoring hypothesis H3 validation progress.
      *
+     * <p><strong>TODO</strong>: Add authentication/authorization before production deployment.
+     * This endpoint should be protected with admin role validation (e.g., @PreAuthorize("hasRole('ADMIN')")).
+     * For MVP internal testing, authentication is deferred to avoid scope creep.
+     *
      * @return Survey analytics with Control/Treatment comparison
      */
     @GetMapping("/api/admin/surveys/analytics")
