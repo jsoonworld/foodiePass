@@ -41,6 +41,47 @@ public class ABTestService {
     }
 
     /**
+     * Atomically assigns a user to an A/B group and creates a MenuScan record.
+     * This prevents race conditions where concurrent requests might assign different groups.
+     *
+     * @param userId User session identifier
+     * @param imageUrl Optional image URL for audit
+     * @param sourceLanguage Source language code
+     * @param targetLanguage Target language code
+     * @param sourceCurrency Source currency code
+     * @param targetCurrency Target currency code
+     * @return Saved MenuScan instance with assigned group
+     */
+    @Transactional
+    public MenuScan assignAndCreateScan(
+        String userId,
+        String imageUrl,
+        String sourceLanguage,
+        String targetLanguage,
+        String sourceCurrency,
+        String targetCurrency
+    ) {
+        // Check for existing scan within transaction
+        Optional<MenuScan> existingScan = menuScanRepository
+            .findFirstByUserIdOrderByCreatedAtDesc(userId);
+
+        ABGroup abGroup;
+        if (existingScan.isPresent()) {
+            abGroup = existingScan.get().getAbGroup();
+        } else {
+            abGroup = randomAssign();
+        }
+
+        MenuScan scan = MenuScan.create(
+            userId, abGroup, imageUrl,
+            sourceLanguage, targetLanguage,
+            sourceCurrency, targetCurrency
+        );
+
+        return menuScanRepository.save(scan);
+    }
+
+    /**
      * Creates and saves a new MenuScan record
      *
      * @param userId User session identifier

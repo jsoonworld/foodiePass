@@ -39,20 +39,19 @@ public class MenuScanService {
     public Mono<MenuScanResponse> scanMenu(MenuScanRequest request, String userId) {
         Instant startTime = Instant.now();
 
-        // Step 1: Assign A/B group
-        ABGroup abGroup = abTestService.assignGroup(userId);
-        log.info("User {} assigned to A/B group: {}", userId, abGroup);
-
-        // Step 2: Create MenuScan record
-        MenuScan menuScan = abTestService.createScan(
+        // Step 1 & 2: Atomically assign A/B group and create MenuScan record
+        // This prevents race conditions with concurrent requests
+        MenuScan menuScan = abTestService.assignAndCreateScan(
             userId,
-            abGroup,
             null,  // imageUrl not stored for MVP
             request.originLanguageName(),
             request.userLanguageName(),
             request.originCurrencyName(),
             request.userCurrencyName()
         );
+
+        ABGroup abGroup = menuScan.getAbGroup();
+        log.info("User {} assigned to A/B group: {}", userId, abGroup);
 
         // Step 3: Execute OCR + Enrichment pipeline (reuse existing MenuService)
         ReconfigureRequest reconfigureRequest = new ReconfigureRequest(
@@ -120,18 +119,76 @@ public class MenuScanService {
     }
 
     /**
-     * Converts PriceInfoResponse to PriceInfoDto
+     * Converts PriceInfoResponse to PriceInfoDto with proper parsing
      */
     private PriceInfoDto convertPriceInfo(ReconfigureResponse.PriceInfoResponse priceInfo) {
-        // Parse the formatted strings
-        // Format: "₩20,000" or "$15.00"
+        // Parse original price
+        String originalFormatted = priceInfo.originPriceWithCurrencyUnit();
+        double originalAmount = extractAmount(originalFormatted);
+        String originalCurrency = extractCurrency(originalFormatted);
+
+        // Parse converted price
+        String convertedFormatted = priceInfo.userPriceWithCurrencyUnit();
+        double convertedAmount = extractAmount(convertedFormatted);
+        String convertedCurrency = extractCurrency(convertedFormatted);
+
         return new PriceInfoDto(
-            0.0,  // originalAmount - would need parsing
-            "USD",  // originalCurrency - would need extraction
-            priceInfo.originPriceWithCurrencyUnit(),
-            0.0,  // convertedAmount - would need parsing
-            "KRW",  // convertedCurrency - would need extraction
-            priceInfo.userPriceWithCurrencyUnit()
+            originalAmount,
+            originalCurrency,
+            originalFormatted,
+            convertedAmount,
+            convertedCurrency,
+            convertedFormatted
         );
+    }
+
+    /**
+     * Extracts numeric amount from formatted price string
+     * Examples: "$15.00" → 15.0, "₩20,000" → 20000.0
+     */
+    private double extractAmount(String formattedPrice) {
+        if (formattedPrice == null || formattedPrice.isEmpty()) {
+            return 0.0;
+        }
+
+        try {
+            // Remove currency symbols and whitespace, keep only digits, dots, and commas
+            String numericPart = formattedPrice.replaceAll("[^0-9.,]", "");
+            // Remove commas for parsing
+            numericPart = numericPart.replace(",", "");
+            return Double.parseDouble(numericPart);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse amount from: {}", formattedPrice);
+            return 0.0;
+        }
+    }
+
+    /**
+     * Extracts currency code from formatted price string
+     * Examples: "$15.00" → "USD", "₩20,000" → "KRW", "€10.50" → "EUR"
+     */
+    private String extractCurrency(String formattedPrice) {
+        if (formattedPrice == null || formattedPrice.isEmpty()) {
+            return "UNKNOWN";
+        }
+
+        // Map common currency symbols to codes
+        if (formattedPrice.contains("$")) return "USD";
+        if (formattedPrice.contains("₩")) return "KRW";
+        if (formattedPrice.contains("€")) return "EUR";
+        if (formattedPrice.contains("¥")) return "JPY";
+        if (formattedPrice.contains("£")) return "GBP";
+        if (formattedPrice.contains("元")) return "CNY";
+
+        // Try to extract 3-letter currency code (e.g., "USD 15.00")
+        String[] parts = formattedPrice.split("\\s+");
+        for (String part : parts) {
+            if (part.matches("[A-Z]{3}")) {
+                return part;
+            }
+        }
+
+        log.warn("Could not extract currency from: {}", formattedPrice);
+        return "UNKNOWN";
     }
 }
