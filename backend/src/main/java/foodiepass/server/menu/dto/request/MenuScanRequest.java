@@ -16,8 +16,17 @@ public record MenuScanRequest(
     String originCurrencyName,  // Optional, auto-detect
     String userCurrencyName
 ) {
-    public MenuScanRequest {
-        // Compact constructor for validation and default values
+    /**
+     * Canonical constructor with validation and default value handling
+     */
+    public MenuScanRequest(
+        String base64EncodedImage,
+        String originLanguageName,
+        String userLanguageName,
+        String originCurrencyName,
+        String userCurrencyName
+    ) {
+        // Validation for required fields
         if (base64EncodedImage == null || base64EncodedImage.isBlank()) {
             throw new IllegalArgumentException("Image is required");
         }
@@ -27,8 +36,12 @@ public record MenuScanRequest(
         if (userCurrencyName == null || userCurrencyName.isBlank()) {
             throw new IllegalArgumentException("Target currency is required");
         }
-        if (originLanguageName == null || originLanguageName.isBlank()) {
-            originLanguageName = "auto";
-        }
+
+        // Assign fields with default value handling
+        this.base64EncodedImage = base64EncodedImage;
+        this.originLanguageName = (originLanguageName == null || originLanguageName.isBlank()) ? "auto" : originLanguageName;
+        this.userLanguageName = userLanguageName;
+        this.originCurrencyName = originCurrencyName;
+        this.userCurrencyName = userCurrencyName;
     }
 }
