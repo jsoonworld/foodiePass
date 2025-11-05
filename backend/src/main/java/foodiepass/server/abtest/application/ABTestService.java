@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -114,12 +115,26 @@ public class ABTestService {
 
     /**
      * Retrieves A/B test results summary (admin only)
+     * Uses a single GROUP BY query to ensure data consistency
      *
      * @return ABTestResult with group counts
      */
     public ABTestResult getResults() {
-        long controlCount = menuScanRepository.countByAbGroup(ABGroup.CONTROL);
-        long treatmentCount = menuScanRepository.countByAbGroup(ABGroup.TREATMENT);
+        List<Object[]> groupCounts = menuScanRepository.countGroupByAbGroup();
+
+        long controlCount = 0;
+        long treatmentCount = 0;
+
+        for (Object[] row : groupCounts) {
+            ABGroup group = (ABGroup) row[0];
+            Long count = (Long) row[1];
+
+            if (group == ABGroup.CONTROL) {
+                controlCount = count;
+            } else if (group == ABGroup.TREATMENT) {
+                treatmentCount = count;
+            }
+        }
 
         return new ABTestResult(controlCount, treatmentCount);
     }

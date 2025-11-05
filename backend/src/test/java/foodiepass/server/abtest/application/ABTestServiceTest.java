@@ -12,6 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -118,8 +120,11 @@ class ABTestServiceTest {
     @DisplayName("A/B 테스트 결과를 조회할 수 있다")
     void getResults() {
         // Given
-        when(menuScanRepository.countByAbGroup(ABGroup.CONTROL)).thenReturn(2L);
-        when(menuScanRepository.countByAbGroup(ABGroup.TREATMENT)).thenReturn(1L);
+        List<Object[]> groupCounts = Arrays.asList(
+            new Object[]{ABGroup.CONTROL, 2L},
+            new Object[]{ABGroup.TREATMENT, 1L}
+        );
+        when(menuScanRepository.countGroupByAbGroup()).thenReturn(groupCounts);
 
         // When
         ABTestResult result = abTestService.getResults();
@@ -128,7 +133,21 @@ class ABTestServiceTest {
         assertEquals(2, result.controlCount());
         assertEquals(1, result.treatmentCount());
         assertEquals(3, result.totalScans());
-        verify(menuScanRepository).countByAbGroup(ABGroup.CONTROL);
-        verify(menuScanRepository).countByAbGroup(ABGroup.TREATMENT);
+        verify(menuScanRepository).countGroupByAbGroup();
+    }
+
+    @Test
+    @DisplayName("A/B 테스트 결과 조회 - 데이터가 없는 경우")
+    void getResults_emptyData() {
+        // Given
+        when(menuScanRepository.countGroupByAbGroup()).thenReturn(Arrays.asList());
+
+        // When
+        ABTestResult result = abTestService.getResults();
+
+        // Then
+        assertEquals(0, result.controlCount());
+        assertEquals(0, result.treatmentCount());
+        assertEquals(0, result.totalScans());
     }
 }
