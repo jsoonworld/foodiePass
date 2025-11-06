@@ -169,6 +169,45 @@ backend/src/main/java/foodiepass/server/
 
 ## Development Workflow
 
+### Git Workflow
+
+**Branch Strategy**: 새로운 작업이나 성격이 다른 작업을 할 때는 새로운 브랜치를 생성
+
+```bash
+# 새 작업 시작
+git checkout develop
+git pull origin develop
+git checkout -b feature/new-feature-name
+
+# 작업 후 커밋
+git add .
+git commit -m "feat: implement new feature"
+git push origin feature/new-feature-name
+
+# 작업 완료 후 develop에 병합
+git checkout develop
+git merge feature/new-feature-name --no-ff
+git push origin develop
+```
+
+**브랜치 전환** (간단한 작업):
+```bash
+# 현재 작업 임시 저장
+git stash
+
+# 다른 브랜치로 전환
+git checkout other-branch
+
+# 작업 후 원래 브랜치로 복귀
+git checkout original-branch
+git stash pop
+```
+
+**❌ Worktree 사용하지 않음**
+- Worktree는 복잡성을 증가시키므로 사용하지 않음
+- 간단한 브랜치 전환으로 충분함
+- 병렬 작업이 필요한 경우에도 브랜치 전환 사용
+
 ### Backend
 ```bash
 cd backend
