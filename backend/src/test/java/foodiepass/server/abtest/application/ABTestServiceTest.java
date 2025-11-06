@@ -7,25 +7,31 @@ import foodiepass.server.abtest.repository.MenuScanRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@ActiveProfiles({"test", "performance-test"})
+@ExtendWith(MockitoExtension.class)
 class ABTestServiceTest {
 
-    @Autowired
-    private ABTestService abTestService;
-
-    @Autowired
+    @Mock
     private MenuScanRepository menuScanRepository;
+
+    @InjectMocks
+    private ABTestService abTestService;
 
     @BeforeEach
     void setUp() {
-        menuScanRepository.deleteAll();
+        // Mocked repository, no need to delete
     }
 
     @Test
@@ -33,6 +39,8 @@ class ABTestServiceTest {
     void assignGroup_newUser() {
         // Given
         String userId = "new-user-123";
+        when(menuScanRepository.findFirstByUserIdOrderByCreatedAtDesc(userId))
+            .thenReturn(Optional.empty());
 
         // When
         ABGroup group = abTestService.assignGroup(userId);
@@ -40,6 +48,7 @@ class ABTestServiceTest {
         // Then
         assertNotNull(group);
         assertTrue(group == ABGroup.CONTROL || group == ABGroup.TREATMENT);
+        verify(menuScanRepository).findFirstByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Test
@@ -47,17 +56,19 @@ class ABTestServiceTest {
     void assignGroup_existingUser_maintainsSameGroup() {
         // Given
         String userId = "existing-user-456";
-        MenuScan existingScan = new MenuScan(
+        MenuScan existingScan = MenuScan.create(
             userId, ABGroup.CONTROL, null,
             "ja", "ko", "JPY", "KRW"
         );
-        menuScanRepository.save(existingScan);
+        when(menuScanRepository.findFirstByUserIdOrderByCreatedAtDesc(userId))
+            .thenReturn(Optional.of(existingScan));
 
         // When
         ABGroup assignedGroup = abTestService.assignGroup(userId);
 
         // Then
         assertEquals(ABGroup.CONTROL, assignedGroup);
+        verify(menuScanRepository).findFirstByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Test
@@ -65,6 +76,8 @@ class ABTestServiceTest {
     void assignGroup_multipleUsers_balancedRatio() {
         // Given
         int totalUsers = 1000;
+        when(menuScanRepository.findFirstByUserIdOrderByCreatedAtDesc(anyString()))
+            .thenReturn(Optional.empty());
 
         // When
         int controlCount = 0;
@@ -85,6 +98,8 @@ class ABTestServiceTest {
         // Given
         String userId = "user-123";
         ABGroup abGroup = ABGroup.TREATMENT;
+        MenuScan expectedScan = MenuScan.create(userId, abGroup, "https://s3.../menu.jpg", "ja", "ko", "JPY", "KRW");
+        when(menuScanRepository.save(any(MenuScan.class))).thenReturn(expectedScan);
 
         // When
         MenuScan scan = abTestService.createScan(
@@ -98,15 +113,18 @@ class ABTestServiceTest {
         assertEquals(userId, scan.getUserId());
         assertEquals(abGroup, scan.getAbGroup());
         assertEquals("ko", scan.getTargetLanguage());
+        verify(menuScanRepository).save(any(MenuScan.class));
     }
 
     @Test
     @DisplayName("A/B 테스트 결과를 조회할 수 있다")
     void getResults() {
         // Given
-        abTestService.createScan("user1", ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
-        abTestService.createScan("user2", ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
-        abTestService.createScan("user3", ABGroup.TREATMENT, null, "ja", "ko", "JPY", "KRW");
+        List<Object[]> groupCounts = Arrays.asList(
+            new Object[]{ABGroup.CONTROL, 2L},
+            new Object[]{ABGroup.TREATMENT, 1L}
+        );
+        when(menuScanRepository.countGroupByAbGroup()).thenReturn(groupCounts);
 
         // When
         ABTestResult result = abTestService.getResults();
@@ -115,5 +133,21 @@ class ABTestServiceTest {
         assertEquals(2, result.controlCount());
         assertEquals(1, result.treatmentCount());
         assertEquals(3, result.totalScans());
+        verify(menuScanRepository).countGroupByAbGroup();
+    }
+
+    @Test
+    @DisplayName("A/B 테스트 결과 조회 - 데이터가 없는 경우")
+    void getResults_emptyData() {
+        // Given
+        when(menuScanRepository.countGroupByAbGroup()).thenReturn(Arrays.asList());
+
+        // When
+        ABTestResult result = abTestService.getResults();
+
+        // Then
+        assertEquals(0, result.controlCount());
+        assertEquals(0, result.treatmentCount());
+        assertEquals(0, result.totalScans());
     }
 }

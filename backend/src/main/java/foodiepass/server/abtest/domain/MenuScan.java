@@ -50,33 +50,9 @@ public class MenuScan {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Creates a new MenuScan instance.
-     *
-     * @param userId User session identifier
-     * @param abGroup A/B test group assignment
-     * @param imageUrl Optional image URL for audit
-     * @param sourceLanguage Source language code
-     * @param targetLanguage Target language code
-     * @param sourceCurrency Source currency code
-     * @param targetCurrency Target currency code
-     * @throws IllegalArgumentException if userId or abGroup is null/empty
-     */
-    public MenuScan(String userId, ABGroup abGroup, String imageUrl,
-                    String sourceLanguage, String targetLanguage,
-                    String sourceCurrency, String targetCurrency) {
-        this(userId, abGroup, imageUrl, sourceLanguage, targetLanguage,
-             sourceCurrency, targetCurrency, LocalDateTime.now());
-    }
-
-    /**
-     * Package-private constructor for testing purposes.
-     * Allows explicit timestamp setting to avoid flaky tests with Thread.sleep.
-     */
-    MenuScan(String userId, ABGroup abGroup, String imageUrl,
-             String sourceLanguage, String targetLanguage,
-             String sourceCurrency, String targetCurrency,
-             LocalDateTime createdAt) {
+    private MenuScan(String userId, ABGroup abGroup, String imageUrl,
+                     String sourceLanguage, String targetLanguage,
+                     String sourceCurrency, String targetCurrency) {
         validateUserId(userId);
         validateABGroup(abGroup);
 
@@ -88,15 +64,11 @@ public class MenuScan {
         this.targetLanguage = targetLanguage;
         this.sourceCurrency = sourceCurrency;
         this.targetCurrency = targetCurrency;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     /**
-     * Factory method for testing purposes.
-     * Creates a MenuScan with explicit timestamp to avoid Thread.sleep in tests.
-     *
-     * <p><b>WARNING:</b> This method should only be used in tests.
-     * Production code should use the standard constructor.
+     * Factory method to create a new MenuScan instance.
      *
      * @param userId User session identifier
      * @param abGroup A/B test group assignment
@@ -105,15 +77,14 @@ public class MenuScan {
      * @param targetLanguage Target language code
      * @param sourceCurrency Source currency code
      * @param targetCurrency Target currency code
-     * @param createdAt Explicit creation timestamp
-     * @return MenuScan instance with specified timestamp
+     * @return New MenuScan instance
+     * @throws IllegalArgumentException if userId or abGroup is null/empty
      */
-    public static MenuScan forTest(String userId, ABGroup abGroup, String imageUrl,
-                                    String sourceLanguage, String targetLanguage,
-                                    String sourceCurrency, String targetCurrency,
-                                    LocalDateTime createdAt) {
+    public static MenuScan create(String userId, ABGroup abGroup, String imageUrl,
+                                   String sourceLanguage, String targetLanguage,
+                                   String sourceCurrency, String targetCurrency) {
         return new MenuScan(userId, abGroup, imageUrl, sourceLanguage, targetLanguage,
-                            sourceCurrency, targetCurrency, createdAt);
+                sourceCurrency, targetCurrency);
     }
 
     private void validateUserId(String userId) {

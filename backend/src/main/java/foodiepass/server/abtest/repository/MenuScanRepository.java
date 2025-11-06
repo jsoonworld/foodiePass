@@ -3,31 +3,28 @@ package foodiepass.server.abtest.repository;
 import foodiepass.server.abtest.domain.ABGroup;
 import foodiepass.server.abtest.domain.MenuScan;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Repository for MenuScan entities.
- * Supports A/B test analytics and user session management.
- */
 public interface MenuScanRepository extends JpaRepository<MenuScan, UUID> {
 
     /**
-     * Finds the most recent scan for a given user.
-     * Used to maintain consistent A/B group assignment across sessions.
-     *
-     * @param userId User session identifier
-     * @return Optional containing the most recent scan, or empty if user has no scans
+     * 사용자의 가장 최근 스캔 조회
      */
     Optional<MenuScan> findFirstByUserIdOrderByCreatedAtDesc(String userId);
 
     /**
-     * Counts total scans for a specific A/B group.
-     * Used for hypothesis validation (H1, H3) analytics.
-     *
-     * @param abGroup A/B test group (CONTROL or TREATMENT)
-     * @return Number of scans in the specified group
+     * A/B 그룹별 스캔 개수
      */
     long countByAbGroup(ABGroup abGroup);
+
+    /**
+     * A/B 그룹별 스캔 개수를 한 번의 쿼리로 조회
+     * 데이터 일관성을 보장하기 위해 GROUP BY를 사용
+     */
+    @Query("SELECT m.abGroup, COUNT(m) FROM MenuScan m GROUP BY m.abGroup")
+    List<Object[]> countGroupByAbGroup();
 }
