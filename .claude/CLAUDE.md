@@ -174,7 +174,7 @@ backend/src/main/java/foodiepass/server/
 Monorepo에서 백엔드와 프론트엔드를 **동시에 다른 브랜치로** 작업하려면 Git Worktree를 사용합니다.
 
 **현재 Worktree 구조**:
-```
+```text
 foodiePass/           → feature/mvp-backend (백엔드 작업)
 foodiePass-frontend/  → feature/mvp-frontend (프론트엔드 작업)
 ```

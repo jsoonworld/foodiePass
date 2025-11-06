@@ -131,7 +131,7 @@ WHERE TABLE_SCHEMA = DATABASE()
 ```
 
 **Expected Output**:
-```
+```text
 +------------------+-------------------------------------------------------+
 | TABLE_NAME       | TABLE_COMMENT                                         |
 +------------------+-------------------------------------------------------+
@@ -169,7 +169,7 @@ WHERE TABLE_NAME = 'survey_response'
 ```
 
 **Expected Output**:
-```
+```text
 fk_survey_scan_id | survey_response | menu_scan | CASCADE
 ```
 
