@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { validateImageSize, validateImageType } from '@/utils/imageUtils';
 
 interface MenuUploaderProps {
-  onImageSelect: (file: File) => void;
+  onImageSelect: (file: File | null) => void;
   disabled?: boolean;
 }
 
@@ -64,7 +64,8 @@ export default function MenuUploader({ onImageSelect, disabled }: MenuUploaderPr
     setSelectedFile(null);
     setPreview(null);
     setError(null);
-  }, []);
+    onImageSelect(null);
+  }, [onImageSelect]);
 
   return (
     <div className="w-full">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSurvey } from '@/hooks/useSurvey';
@@ -11,25 +11,32 @@ interface SurveyModalProps {
 export default function SurveyModal({ scanId, delay = 5000 }: SurveyModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { submit, loading } = useSurvey();
+  const { submit, loading, error } = useSurvey();
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsOpen(true);
     }, delay);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
   }, [delay]);
 
   const handleSubmit = async (hasConfidence: boolean) => {
     try {
       await submit(scanId, hasConfidence);
       setSubmitted(true);
-      setTimeout(() => {
+      closeTimerRef.current = setTimeout(() => {
         setIsOpen(false);
       }, 2000);
     } catch (error) {
       console.error('Failed to submit survey:', error);
+      // Error is already handled by useSurvey hook and displayed below
     }
   };
 
@@ -46,6 +53,9 @@ export default function SurveyModal({ scanId, delay = 5000 }: SurveyModalProps) 
             <p className="text-foreground mb-6 text-center">
               이 정보만으로 확신을 갖고 주문할 수 있습니까?
             </p>
+            {error && (
+              <p className="text-destructive text-sm text-center mb-4">{error}</p>
+            )}
             <div className="flex gap-3">
               <Button
                 onClick={() => handleSubmit(true)}
