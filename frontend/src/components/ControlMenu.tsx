@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import type { MenuItem } from '@/lib/types';
 
 interface ControlMenuProps {
   items: MenuItem[];
 }
 
-export default function ControlMenu({ items }: ControlMenuProps) {
+function ControlMenu({ items }: ControlMenuProps) {
   return (
     <div className="space-y-4">
       {items.map((item) => (
@@ -31,3 +32,5 @@ export default function ControlMenu({ items }: ControlMenuProps) {
     </div>
   );
 }
+
+export default memo(ControlMenu);

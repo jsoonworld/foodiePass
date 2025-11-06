@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { MenuItem } from '@/lib/types';
 import { ImageIcon } from 'lucide-react';
 
@@ -5,7 +6,7 @@ interface TreatmentMenuProps {
   items: MenuItem[];
 }
 
-export default function TreatmentMenu({ items }: TreatmentMenuProps) {
+function TreatmentMenu({ items }: TreatmentMenuProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {items.map((item) => (
@@ -18,6 +19,7 @@ export default function TreatmentMenu({ items }: TreatmentMenuProps) {
               <img
                 src={item.imageUrl}
                 alt={item.translatedName}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -55,3 +57,5 @@ export default function TreatmentMenu({ items }: TreatmentMenuProps) {
     </div>
   );
 }
+
+export default memo(TreatmentMenu);
