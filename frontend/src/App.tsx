@@ -7,7 +7,21 @@ import HomePage from "./pages/HomePage";
 import MenuResultPage from "./pages/MenuResultPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Optimized QueryClient configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time (formerly cacheTime)
+      retry: 1, // Only retry once on failure
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnReconnect: true, // Refetch when internet connection is restored
+    },
+    mutations: {
+      retry: 0, // Don't retry mutations (menu scan, survey submit)
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
