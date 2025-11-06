@@ -169,13 +169,73 @@ backend/src/main/java/foodiepass/server/
 
 ## Development Workflow
 
+### Git Worktree for Parallel Development
+
+Monorepo에서 백엔드와 프론트엔드를 **동시에 다른 브랜치로** 작업하려면 Git Worktree를 사용합니다.
+
+**현재 Worktree 구조**:
+```
+foodiePass/           → feature/mvp-backend (백엔드 작업)
+foodiePass-frontend/  → feature/mvp-frontend (프론트엔드 작업)
+```
+
+**터미널 1: 백엔드 작업**
+```bash
+cd /path/to/foodiePass
+git branch  # feature/mvp-backend
+
+# 백엔드 작업
+cd backend
+./gradlew bootRun --args='--spring.profiles.active=local'
+
+# 커밋
+cd ..
+git add backend/
+git commit -m "feat(backend): ..."
+git push origin feature/mvp-backend
+```
+
+**터미널 2: 프론트엔드 작업**
+```bash
+cd /path/to/foodiePass-frontend
+git branch  # feature/mvp-frontend
+
+# 프론트엔드 작업
+cd frontend
+npm run dev
+
+# 커밋
+cd ..
+git add frontend/
+git commit -m "feat(frontend): ..."
+git push origin feature/mvp-frontend
+```
+
+**Worktree 관리 명령어**:
+```bash
+# Worktree 목록 확인
+git worktree list
+
+# 새 Worktree 추가
+git worktree add <path> <branch>
+
+# Worktree 삭제
+git worktree remove <path>
+```
+
+**머지 워크플로우**:
+1. 각 브랜치에서 독립적으로 작업 및 커밋
+2. GitHub에서 PR 생성 (`feature/mvp-backend` → `develop`, `feature/mvp-frontend` → `develop`)
+3. Review 후 develop 브랜치에 머지
+4. 충돌 가능성 낮음 (다른 폴더 수정)
+
 ### Backend
 ```bash
 cd backend
 ./gradlew bootRun --args='--spring.profiles.active=local'
 ```
 
-### Frontend (once set up)
+### Frontend
 ```bash
 cd frontend
 npm run dev

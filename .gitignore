@@ -117,3 +117,16 @@ HELP.md
 # Credentials & Sensitive Info (인증서 및 민감 정보)
 # ===============================================================
 *.json
+
+# Environment files
+backend/env.*
+backend/.env*
+
+# ===============================================================
+# Backups & Temporary Files (백업 및 임시 파일)
+# ===============================================================
+*_backup*/
+*/docs_backup/
+*/claude_backup/
+WORKTREE_GUIDE.md
+scripts/agents/
