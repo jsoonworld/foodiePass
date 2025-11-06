@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { MenuItem } from '@/lib/types';
 import { ImageIcon } from 'lucide-react';
 
@@ -7,6 +7,12 @@ interface TreatmentMenuProps {
 }
 
 function TreatmentMenu({ items }: TreatmentMenuProps) {
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  const handleImageError = (itemId: string) => {
+    setImageErrors(prev => ({ ...prev, [itemId]: true }));
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {items.map((item) => (
@@ -15,12 +21,13 @@ function TreatmentMenu({ items }: TreatmentMenuProps) {
           className="bg-card border border-border rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all"
         >
           <div className="aspect-[4/3] bg-muted relative">
-            {item.imageUrl ? (
+            {item.imageUrl && !imageErrors[item.id] ? (
               <img
                 src={item.imageUrl}
                 alt={item.translatedName}
                 loading="lazy"
                 className="w-full h-full object-cover"
+                onError={() => handleImageError(item.id)}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
