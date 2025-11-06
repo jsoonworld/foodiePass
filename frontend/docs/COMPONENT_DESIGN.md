@@ -45,24 +45,28 @@ src/
 ```tsx
 // components/MenuUploader/index.tsx
 export function MenuUploader() {
-  const [image, setImage] = useState<string | null>(null);
-  const [targetLanguage, setTargetLanguage] = useState('ko');
-  const [targetCurrency, setTargetCurrency] = useState('KRW');
+  const [base64EncodedImage, setBase64EncodedImage] = useState<string | null>(null);
+  const [userLanguageName, setUserLanguageName] = useState('Korean');
+  const [userCurrencyName, setUserCurrencyName] = useState('KRW Won');
   const { scan, loading } = useMenuScan();
 
   const handleSubmit = async () => {
-    await scan({ image, targetLanguage, targetCurrency });
-    router.push(`/menu/${scanId}`);
+    const result = await scan({
+      base64EncodedImage,
+      userLanguageName,
+      userCurrencyName
+    });
+    router.push(`/menu/${result.scanId}`);
   };
 
   return (
     <div>
-      <ImageInput onChange={setImage} />
+      <ImageInput onChange={setBase64EncodedImage} />
       <LanguageCurrencySelector
-        onLanguageChange={setTargetLanguage}
-        onCurrencyChange={setTargetCurrency}
+        onLanguageChange={setUserLanguageName}
+        onCurrencyChange={setUserCurrencyName}
       />
-      <button onClick={handleSubmit} disabled={!image || loading}>
+      <button onClick={handleSubmit} disabled={!base64EncodedImage || loading}>
         {loading ? 'Processing...' : 'Scan Menu'}
       </button>
     </div>

@@ -19,11 +19,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 **Request**:
 ```typescript
 interface MenuScanRequest {
-  image: string;              // Base64 encoded
-  sourceLanguage?: string;    // Optional, default: "auto"
-  targetLanguage: string;     // Required (예: "ko", "en")
-  sourceCurrency?: string;    // Optional
-  targetCurrency: string;     // Required (예: "KRW", "USD")
+  base64EncodedImage: string;      // Base64 encoded image
+  originLanguageName?: string;     // Optional, default: "auto"
+  userLanguageName: string;        // Required (예: "Korean", "English")
+  originCurrencyName?: string;     // Optional
+  userCurrencyName: string;        // Required (예: "KRW Won", "USD Dollar")
 }
 ```
 
@@ -136,6 +136,14 @@ export function useMenuScan() {
 
   return { scan, loading, error, result };
 }
+
+// Usage example:
+const { scan } = useMenuScan();
+await scan({
+  base64EncodedImage: "data:image/jpeg;base64,...",
+  userLanguageName: "Korean",
+  userCurrencyName: "KRW Won"
+});
 ```
 
 ---
