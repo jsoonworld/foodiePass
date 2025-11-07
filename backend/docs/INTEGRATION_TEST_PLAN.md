@@ -35,7 +35,7 @@
 ### 1.1 Google Cloud 프로젝트 생성
 
 #### 단계
-1. Google Cloud Console 접속: https://console.cloud.google.com/
+1. [Google Cloud Console](https://console.cloud.google.com/) 접속
 2. "새 프로젝트" 클릭
 3. 프로젝트 이름: `foodiepass-mvp` (또는 원하는 이름)
 4. 프로젝트 ID 복사 (예: `foodiepass-mvp-123456`)
