@@ -42,7 +42,7 @@ class SurveyServiceTest {
         UUID scanId = UUID.randomUUID();
         Boolean hasConfidence = true;
 
-        MenuScan menuScan = new MenuScan(
+        MenuScan menuScan = MenuScan.create(
                 "user123",
                 ABGroup.TREATMENT,
                 "http://example.com/image.jpg",
@@ -91,7 +91,7 @@ class SurveyServiceTest {
         UUID scanId = UUID.randomUUID();
         Boolean hasConfidence = true;
 
-        MenuScan menuScan = new MenuScan(
+        MenuScan menuScan = MenuScan.create(
                 "user123",
                 ABGroup.CONTROL,
                 "http://example.com/image.jpg",
