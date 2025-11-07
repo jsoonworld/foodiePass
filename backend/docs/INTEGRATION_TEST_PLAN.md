@@ -1,0 +1,1613 @@
+# 통합 테스트 마스터 플랜
+
+> **목표**: 실제 API를 사용하여 전체 파이프라인이 동작하는지 검증하고, AWS 배포 준비
+
+## 🎯 최종 목표
+
+메뉴판 사진 업로드 → OCR → 번역 → 음식 매칭 → 환율 변환 → A/B 분기
+**로컬 개발 환경과 AWS 프로덕션 환경에서 모두 동작 검증**
+
+---
+
+## 📋 전체 로드맵
+
+| Phase | 환경 | 목표 | 예상 시간 |
+|-------|------|------|---------|
+| Phase 1 | 로컬 | Google Cloud 설정 | 30분 |
+| Phase 2 | 로컬 | 개별 API 단위 테스트 (4개) | 1-2시간 |
+| Phase 3 | 로컬 | 부분 통합 테스트 | 30분 |
+| Phase 4 | 로컬 | 전체 E2E 테스트 | 1시간 |
+| Phase 5 | 로컬 | 서버 실행 및 API 테스트 | 30분 |
+| Phase 6 | AWS | AWS 환경 설정 | 1-2시간 |
+| Phase 7 | AWS | AWS 배포 및 검증 | 1시간 |
+| **Total** | | | **5-7시간** |
+
+---
+
+## 📋 Phase 1: Google Cloud 설정 (로컬 환경)
+
+### 목표
+- Google Cloud 프로젝트 생성
+- Vertex AI API, Cloud Translation API 활성화
+- 서비스 계정 키 생성
+- 로컬 환경 변수 설정
+
+### 1.1 Google Cloud 프로젝트 생성
+
+#### 단계
+1. [Google Cloud Console](https://console.cloud.google.com/) 접속
+2. "새 프로젝트" 클릭
+3. 프로젝트 이름: `foodiepass-mvp` (또는 원하는 이름)
+4. 프로젝트 ID 복사 (예: `foodiepass-mvp-123456`)
+
+#### 검증
+```bash
+# 프로젝트 ID가 올바르게 생성되었는지 확인
+echo "프로젝트 ID: [복사한 프로젝트 ID]"
+```
+
+✅ **완료 조건**: 프로젝트 ID 확보
+
+---
+
+### 1.2 API 활성화
+
+#### 단계
+1. Google Cloud Console에서 프로젝트 선택
+2. 좌측 메뉴 → "API 및 서비스" → "라이브러리"
+3. 다음 API 검색 및 활성화:
+   - **Vertex AI API** (OCR용)
+   - **Cloud Translation API** (번역용)
+
+#### 검증
+```bash
+# 웹 콘솔에서 확인:
+# "API 및 서비스" → "대시보드" → 활성화된 API 목록 확인
+```
+
+✅ **완료 조건**: 두 API 모두 활성화 상태
+
+---
+
+### 1.3 서비스 계정 생성 및 키 다운로드
+
+#### 방법 1: 웹 콘솔 (권장)
+
+##### 단계
+1. 좌측 메뉴 → "IAM 및 관리자" → "서비스 계정"
+2. "서비스 계정 만들기" 클릭
+3. 서비스 계정 이름: `foodiepass-sa`
+4. "만들기 및 계속하기" 클릭
+5. 역할 부여:
+   - **Vertex AI User** (`roles/aiplatform.user`)
+   - **Cloud Translation API User** (`roles/cloudtranslate.user`)
+6. "계속" → "완료" 클릭
+7. 생성된 서비스 계정 클릭 → "키" 탭 → "키 추가" → "새 키 만들기"
+8. JSON 형식 선택 → "만들기"
+9. 다운로드된 키를 안전한 위치에 저장:
+   - 예: `~/foodiepass-credentials.json`
+
+#### 방법 2: gcloud CLI (선택)
+
+```bash
+# gcloud CLI 설치 필요: https://cloud.google.com/sdk/docs/install
+
+# 서비스 계정 생성
+gcloud iam service-accounts create foodiepass-sa \
+  --display-name="FoodiePass Service Account" \
+  --project=YOUR_PROJECT_ID
+
+# Vertex AI User 역할 부여
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:foodiepass-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/aiplatform.user"
+
+# Cloud Translation API User 역할 부여
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:foodiepass-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudtranslate.user"
+
+# 키 생성 및 다운로드
+gcloud iam service-accounts keys create ~/foodiepass-credentials.json \
+  --iam-account=foodiepass-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+```
+
+#### 검증
+```bash
+# 키 파일 존재 확인
+ls -l ~/foodiepass-credentials.json
+
+# 키 파일 내용 확인 (JSON 형식)
+cat ~/foodiepass-credentials.json | head -n 5
+```
+
+✅ **완료 조건**: credentials.json 파일 존재 및 유효성 확인
+
+---
+
+### 1.4 로컬 환경 변수 설정
+
+#### backend/.env 파일 생성
+
+```bash
+cd backend
+
+# .env 파일 생성
+cat > .env << 'EOF'
+# ====================================
+# Google Cloud Configuration
+# ====================================
+GOOGLE_CREDENTIALS_PATH=/Users/YOUR_USERNAME/foodiepass-credentials.json
+GCP_PROJECT_ID=your-project-id-here
+GCP_LOCATION=us-central1
+
+# Gemini Models
+GEMINI_MODEL_VISION=gemini-1.5-flash
+GEMINI_MODEL_PRO=gemini-1.5-pro
+
+# ====================================
+# TasteAtlas Configuration
+# ====================================
+TASTE_ATLAS_API_URL=https://www.tasteatlas.com/api/search
+TASTE_ATLAS_AUTH_TOKEN=
+TASTE_ATLAS_BASE_URL=https://www.tasteatlas.com
+TASTE_ATLAS_DEFAULT_IMAGE_URL=https://via.placeholder.com/400
+TASTE_ATLAS_DEFAULT_DESCRIPTION=음식 정보를 불러올 수 없습니다
+TASTE_ATLAS_SELECTOR_IMAGE=img.food-image
+TASTE_ATLAS_SELECTOR_DESCRIPTION=div.description
+
+# ====================================
+# Google Finance Configuration
+# ====================================
+GOOGLE_FINANCE_URL_FORMAT=https://www.google.com/finance/quote/%s-%s
+GOOGLE_FINANCE_SELECTOR=div.YMlKec.fxKbKc
+
+# ====================================
+# Local Development (H2)
+# ====================================
+SPRING_PROFILES_ACTIVE=dev
+EOF
+
+# 실제 값으로 교체 (YOUR_USERNAME, your-project-id-here)
+# 예: sed -i '' 's|YOUR_USERNAME|harperkwon|g' .env
+# 예: sed -i '' 's|your-project-id-here|foodiepass-mvp-123456|g' .env
+```
+
+#### 환경 변수 로드 (터미널에서)
+
+```bash
+# .env 파일 로드
+export $(cat .env | xargs)
+
+# 또는 각 터미널 세션마다 자동 로드 (선택)
+echo "export \$(cat $(pwd)/.env | xargs)" >> ~/.zshrc  # zsh 사용 시
+echo "export \$(cat $(pwd)/.env | xargs)" >> ~/.bashrc # bash 사용 시
+```
+
+#### 검증
+
+```bash
+# 환경 변수 확인
+echo "GOOGLE_CREDENTIALS_PATH: $GOOGLE_CREDENTIALS_PATH"
+echo "GCP_PROJECT_ID: $GCP_PROJECT_ID"
+echo "GCP_LOCATION: $GCP_LOCATION"
+
+# 파일 존재 확인
+ls -l $GOOGLE_CREDENTIALS_PATH
+
+# Spring Boot가 환경 변수를 읽을 수 있는지 확인
+./gradlew bootRun --args='--spring.profiles.active=dev' --dry-run
+```
+
+✅ **완료 조건**:
+- 모든 환경 변수가 설정됨
+- credentials.json 파일 경로가 유효함
+- .env 파일이 .gitignore에 포함됨
+
+---
+
+### Phase 1 체크리스트
+
+- [ ] Google Cloud 프로젝트 생성
+- [ ] Vertex AI API 활성화
+- [ ] Cloud Translation API 활성화
+- [ ] 서비스 계정 생성
+- [ ] credentials.json 다운로드 및 저장
+- [ ] backend/.env 파일 생성
+- [ ] 환경 변수 로드 확인
+- [ ] .gitignore에 .env 추가 확인
+
+---
+
+## 📋 Phase 2: 개별 API 단위 테스트
+
+### 목표
+- 각 외부 API가 독립적으로 동작하는지 검증
+- 문제 발생 시 어느 API에서 실패하는지 명확히 파악
+
+---
+
+### 2.1 Google Gemini OCR 테스트
+
+#### 테스트 이미지 준비
+
+```bash
+cd backend
+
+# 테스트 리소스 디렉토리 생성
+mkdir -p src/test/resources
+
+# 테스트용 메뉴판 이미지 다운로드 (예시)
+# 실제 일본/한국/중국 메뉴판 사진을 test-menu.jpg로 저장
+# 또는 직접 촬영한 메뉴판 사진 사용
+```
+
+#### 테스트 코드 작성
+
+```bash
+# 테스트 파일 생성
+mkdir -p src/test/java/foodiepass/server/menu/infra
+
+cat > src/test/java/foodiepass/server/menu/infra/GeminiOcrIntegrationTest.java << 'EOF'
+package foodiepass.server.menu.infra;
+
+import foodiepass.server.menu.application.port.out.OcrReader;
+import foodiepass.server.menu.domain.MenuItem;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("Gemini OCR 통합 테스트")
+class GeminiOcrIntegrationTest {
+
+    @Autowired
+    private OcrReader ocrReader;
+
+    @Test
+    @DisplayName("실제 메뉴판 이미지에서 텍스트 추출")
+    void extractTextFromRealMenuImage() throws Exception {
+        // Given: 실제 메뉴판 이미지
+        byte[] imageBytes = Files.readAllBytes(
+            Paths.get("src/test/resources/test-menu.jpg")
+        );
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        // When: OCR 실행
+        List<MenuItem> menuItems = ocrReader.read(base64Image);
+
+        // Then: 검증
+        assertThat(menuItems).isNotEmpty();
+        assertThat(menuItems.get(0).getName()).isNotBlank();
+        assertThat(menuItems.get(0).getPrice()).isNotNull();
+
+        // 결과 출력
+        System.out.println("\n=== OCR 결과 ===");
+        menuItems.forEach(item -> {
+            System.out.println("메뉴 이름: " + item.getName());
+            System.out.println("가격: " + item.getPrice());
+            System.out.println("---");
+        });
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+# 환경 변수 로드 (새 터미널이면 필수)
+export $(cat .env | xargs)
+
+# 테스트 실행
+./gradlew test --tests GeminiOcrIntegrationTest
+
+# 또는 더 자세한 로그와 함께
+./gradlew test --tests GeminiOcrIntegrationTest --info
+```
+
+#### 검증
+
+✅ **성공 조건**:
+- 테스트 통과
+- 메뉴 이름이 정확하게 추출됨
+- 가격이 숫자로 파싱됨
+- 콘솔에 OCR 결과 출력됨
+
+❌ **실패 시 조치**:
+1. **403/401 에러**: credentials.json 경로 확인, 서비스 계정 권한 확인
+2. **404 에러**: API 활성화 확인, 프로젝트 ID 확인
+3. **Quota 초과**: Google Cloud Console → Quotas 확인
+4. **이미지 파일 없음**: src/test/resources/test-menu.jpg 존재 확인
+
+---
+
+### 2.2 Google Translation API 테스트
+
+#### 테스트 코드 작성
+
+```bash
+mkdir -p src/test/java/foodiepass/server/language/infra
+
+cat > src/test/java/foodiepass/server/language/infra/GoogleTranslationIntegrationTest.java << 'EOF'
+package foodiepass.server.language.infra;
+
+import foodiepass.server.language.domain.Language;
+import foodiepass.server.menu.application.port.out.TranslationClient;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("Google Translation 통합 테스트")
+class GoogleTranslationIntegrationTest {
+
+    @Autowired
+    private TranslationClient translationClient;
+
+    @Test
+    @DisplayName("일본어 → 영어 번역")
+    void translateJapaneseToEnglish() {
+        // Given
+        String japanese = "寿司";
+        Language source = Language.JAPANESE;
+        Language target = Language.ENGLISH;
+
+        // When
+        var result = translationClient.translateAsync(source, target, japanese);
+
+        // Then
+        StepVerifier.create(result)
+            .assertNext(translated -> {
+                assertThat(translated).isNotBlank();
+                assertThat(translated.toLowerCase()).contains("sushi");
+                System.out.println("\n번역 결과: " + japanese + " → " + translated);
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("영어 → 한국어 번역")
+    void translateEnglishToKorean() {
+        // Given
+        String english = "Fresh raw fish with rice";
+        Language source = Language.ENGLISH;
+        Language target = Language.KOREAN;
+
+        // When
+        var result = translationClient.translateAsync(source, target, english);
+
+        // Then
+        StepVerifier.create(result)
+            .assertNext(translated -> {
+                assertThat(translated).isNotBlank();
+                System.out.println("\n번역 결과: " + english + " → " + translated);
+            })
+            .verifyComplete();
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+./gradlew test --tests GoogleTranslationIntegrationTest
+```
+
+#### 검증
+
+✅ **성공 조건**:
+- 번역이 정확하게 수행됨
+- 결과가 의미 있는 번역임
+- 테스트 통과
+
+---
+
+### 2.3 TasteAtlas 스크래핑 테스트
+
+#### 테스트 코드 작성
+
+```bash
+mkdir -p src/test/java/foodiepass/server/menu/infra
+
+cat > src/test/java/foodiepass/server/menu/infra/TasteAtlasFoodScrapperIntegrationTest.java << 'EOF'
+package foodiepass.server.menu.infra;
+
+import foodiepass.server.menu.application.port.out.FoodScrapper;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("TasteAtlas 스크래핑 통합 테스트")
+class TasteAtlasFoodScrapperIntegrationTest {
+
+    @Autowired
+    @Qualifier("tasteAtlasFoodScrapper")
+    private FoodScrapper foodScrapper;
+
+    @Test
+    @DisplayName("실제 음식 정보 스크래핑 - Sushi")
+    void scrapSushiInfo() {
+        // Given
+        List<String> foodNames = List.of("Sushi");
+
+        // When
+        var result = foodScrapper.scrapAsync(foodNames).next();
+
+        // Then
+        StepVerifier.create(result)
+            .assertNext(foodInfo -> {
+                assertThat(foodInfo.getName()).isNotBlank();
+                assertThat(foodInfo.getDescription()).isNotBlank();
+                assertThat(foodInfo.getImage()).isNotBlank();
+
+                System.out.println("\n=== 스크래핑 결과 ===");
+                System.out.println("이름: " + foodInfo.getName());
+                System.out.println("설명: " + foodInfo.getDescription());
+                System.out.println("이미지: " + foodInfo.getImage());
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("여러 음식 정보 스크래핑")
+    void scrapMultipleFoods() {
+        // Given
+        List<String> foodNames = List.of("Sushi", "Ramen", "Tempura");
+
+        // When
+        var results = foodScrapper.scrapAsync(foodNames);
+
+        // Then
+        StepVerifier.create(results.collectList())
+            .assertNext(foodInfos -> {
+                assertThat(foodInfos).hasSize(3);
+                foodInfos.forEach(foodInfo -> {
+                    System.out.println("\n--- " + foodInfo.getName() + " ---");
+                    System.out.println("설명: " + foodInfo.getDescription().substring(0, 100) + "...");
+                    System.out.println("이미지: " + foodInfo.getImage());
+                });
+            })
+            .verifyComplete();
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+./gradlew test --tests TasteAtlasFoodScrapperIntegrationTest
+```
+
+#### 검증
+
+✅ **성공 조건**:
+- 음식 이름, 설명, 이미지 URL이 모두 존재
+- 이미지 URL이 유효함 (https://)
+
+❌ **실패 시 조치**:
+- TasteAtlas 웹사이트 구조 변경 가능성
+- 셀렉터 업데이트 필요 (.env 파일 수정)
+- 기본값(Fallback) 동작 확인
+
+---
+
+### 2.4 환율 조회 테스트
+
+#### 테스트 코드 작성
+
+```bash
+mkdir -p src/test/java/foodiepass/server/currency/infra
+
+cat > src/test/java/foodiepass/server/currency/infra/GoogleFinanceRateProviderIntegrationTest.java << 'EOF'
+package foodiepass.server.currency.infra;
+
+import foodiepass.server.currency.application.port.out.ExchangeRateProvider;
+import foodiepass.server.currency.domain.Currency;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("Google Finance 환율 조회 통합 테스트")
+class GoogleFinanceRateProviderIntegrationTest {
+
+    @Autowired
+    private ExchangeRateProvider rateProvider;
+
+    @Test
+    @DisplayName("JPY → KRW 환율 조회")
+    void getExchangeRateJpyToKrw() {
+        // Given
+        Currency from = Currency.JAPANESE_YEN;
+        Currency to = Currency.SOUTH_KOREAN_WON;
+
+        // When
+        BigDecimal rate = rateProvider.getExchangeRate(from, to);
+
+        // Then
+        assertThat(rate).isNotNull();
+        assertThat(rate).isGreaterThan(BigDecimal.ZERO);
+        assertThat(rate).isLessThan(BigDecimal.valueOf(20)); // 현실적인 범위 확인
+
+        System.out.println("\n환율: 1 JPY = " + rate + " KRW");
+    }
+
+    @Test
+    @DisplayName("USD → KRW 환율 조회")
+    void getExchangeRateUsdToKrw() {
+        // Given
+        Currency from = Currency.US_DOLLAR;
+        Currency to = Currency.SOUTH_KOREAN_WON;
+
+        // When
+        BigDecimal rate = rateProvider.getExchangeRate(from, to);
+
+        // Then
+        assertThat(rate).isNotNull();
+        assertThat(rate).isGreaterThan(BigDecimal.valueOf(1000)); // 최소 1000원 이상
+        assertThat(rate).isLessThan(BigDecimal.valueOf(2000)); // 2000원 미만
+
+        System.out.println("\n환율: 1 USD = " + rate + " KRW");
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+./gradlew test --tests GoogleFinanceRateProviderIntegrationTest
+```
+
+#### 검증
+
+✅ **성공 조건**:
+- 환율이 0보다 큼
+- 환율이 현실적인 범위 내
+- 테스트 통과
+
+---
+
+### Phase 2 일괄 실행
+
+#### 모든 통합 테스트 한 번에 실행
+
+```bash
+# 모든 IntegrationTest 실행
+./gradlew test --tests "*IntegrationTest"
+
+# 또는 개별 패키지별 실행
+./gradlew test --tests "foodiepass.server.menu.infra.*IntegrationTest"
+./gradlew test --tests "foodiepass.server.language.infra.*IntegrationTest"
+./gradlew test --tests "foodiepass.server.currency.infra.*IntegrationTest"
+```
+
+### Phase 2 체크리스트
+
+- [ ] test-menu.jpg 이미지 준비
+- [ ] GeminiOcrIntegrationTest 작성 및 통과
+- [ ] GoogleTranslationIntegrationTest 작성 및 통과
+- [ ] TasteAtlasFoodScrapperIntegrationTest 작성 및 통과
+- [ ] GoogleFinanceRateProviderIntegrationTest 작성 및 통과
+- [ ] 모든 개별 API 테스트 통과 확인
+
+---
+
+## 📋 Phase 3: 부분 파이프라인 통합 테스트
+
+### 목표
+- 2개 이상의 API를 연결하여 동작 확인
+- 실제 데이터 플로우 검증
+
+---
+
+### 3.1 OCR + 번역 통합 테스트
+
+#### 테스트 코드 작성
+
+```bash
+cat > src/test/java/foodiepass/server/menu/application/OcrTranslationIntegrationTest.java << 'EOF'
+package foodiepass.server.menu.application;
+
+import foodiepass.server.menu.application.dto.ReconfigureRequest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("OCR + 번역 통합 테스트")
+class OcrTranslationIntegrationTest {
+
+    @Autowired
+    private MenuService menuService;
+
+    @Test
+    @DisplayName("일본 메뉴판 → OCR → 한국어 번역")
+    void ocrAndTranslateJapaneseMenu() throws Exception {
+        // Given: 일본 메뉴판 이미지
+        byte[] imageBytes = Files.readAllBytes(
+            Paths.get("src/test/resources/test-menu.jpg")
+        );
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        ReconfigureRequest request = new ReconfigureRequest(
+            base64Image,
+            "Japanese",
+            "Korean",
+            "JPY",
+            "KRW"
+        );
+
+        // When: OCR + 번역 실행
+        var result = menuService.reconfigure(request);
+
+        // Then: 검증
+        StepVerifier.create(result)
+            .assertNext(response -> {
+                assertThat(response.results()).isNotEmpty();
+
+                var firstItem = response.results().get(0);
+                assertThat(firstItem.originMenuName()).isNotBlank();
+                assertThat(firstItem.translatedMenuName()).isNotBlank();
+                assertThat(firstItem.originMenuName()).isNotEqualTo(firstItem.translatedMenuName());
+
+                System.out.println("\n=== OCR + 번역 결과 ===");
+                response.results().forEach(item -> {
+                    System.out.println("원본: " + item.originMenuName());
+                    System.out.println("번역: " + item.translatedMenuName());
+                    System.out.println("가격: " + item.originPrice() + " → " + item.convertedPrice());
+                    System.out.println("---");
+                });
+            })
+            .verifyComplete();
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+./gradlew test --tests OcrTranslationIntegrationTest
+```
+
+### Phase 3 체크리스트
+
+- [ ] OcrTranslationIntegrationTest 작성 및 통과
+- [ ] OCR → 번역 데이터 플로우 검증
+- [ ] 원본과 번역 결과가 다른지 확인
+
+---
+
+## 📋 Phase 4: 전체 파이프라인 E2E 테스트
+
+### 목표
+- 실제 사용자 시나리오 전체 플로우 검증
+- A/B 테스트 분기 포함
+- 처리 시간 측정 (H2 가설 검증)
+
+---
+
+### 4.1 전체 파이프라인 E2E 테스트
+
+#### 테스트 코드 작성
+
+```bash
+mkdir -p src/test/java/foodiepass/server/menu/e2e
+
+cat > src/test/java/foodiepass/server/menu/e2e/FullPipelineE2ETest.java << 'EOF'
+package foodiepass.server.menu.e2e;
+
+import foodiepass.server.menu.application.MenuScanService;
+import foodiepass.server.menu.application.dto.MenuScanRequest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@ActiveProfiles("dev")
+@DisplayName("전체 파이프라인 E2E 테스트")
+class FullPipelineE2ETest {
+
+    @Autowired
+    private MenuScanService menuScanService;
+
+    @Test
+    @DisplayName("메뉴판 업로드 → 전체 처리 → A/B 분기")
+    void fullPipelineWithABTest() throws Exception {
+        // Given: 실제 메뉴판 이미지
+        byte[] imageBytes = Files.readAllBytes(
+            Paths.get("src/test/resources/test-menu.jpg")
+        );
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        MenuScanRequest request = new MenuScanRequest(
+            base64Image,
+            "ja",
+            "ko",
+            "JPY",
+            "KRW"
+        );
+
+        String userId = "test-user-e2e";
+
+        // When: 전체 플로우 실행
+        var result = menuScanService.scanMenu(request, userId);
+
+        // Then: 검증
+        StepVerifier.create(result)
+            .assertNext(response -> {
+                // 기본 검증
+                assertThat(response.scanId()).isNotNull();
+                assertThat(response.abGroup()).isIn("CONTROL", "TREATMENT");
+                assertThat(response.items()).isNotEmpty();
+                assertThat(response.processingTime()).isLessThan(10.0); // 10초 이내
+
+                // H2 검증: 처리 시간 5초 이내 목표
+                if (response.processingTime() <= 5.0) {
+                    System.out.println("✅ H2 검증 성공: 처리 시간 5초 이내");
+                } else {
+                    System.out.println("⚠️ H2 검증 실패: 처리 시간 " + response.processingTime() + "초 (목표: 5초)");
+                }
+
+                // A/B 그룹별 검증
+                if (response.abGroup().equals("TREATMENT")) {
+                    // Treatment: 사진 + 설명 있어야 함
+                    response.items().forEach(item -> {
+                        assertThat(item.imageUrl()).isNotNull();
+                        assertThat(item.description()).isNotNull();
+                    });
+                    System.out.println("✅ Treatment 그룹: 사진 + 설명 포함");
+                } else {
+                    // Control: 사진 + 설명 없어야 함
+                    response.items().forEach(item -> {
+                        assertThat(item.imageUrl()).isNull();
+                        assertThat(item.description()).isNull();
+                    });
+                    System.out.println("✅ Control 그룹: 텍스트만 포함");
+                }
+
+                // 결과 출력
+                System.out.println("\n=== E2E 테스트 결과 ===");
+                System.out.println("Scan ID: " + response.scanId());
+                System.out.println("A/B Group: " + response.abGroup());
+                System.out.println("Processing Time: " + response.processingTime() + "s");
+                System.out.println("Items: " + response.items().size());
+
+                response.items().forEach(item -> {
+                    System.out.println("\n--- 메뉴 아이템 ---");
+                    System.out.println("원본: " + item.originalName());
+                    System.out.println("번역: " + item.translatedName());
+                    System.out.println("가격: " + item.priceInfo().convertedFormatted());
+                    if (item.description() != null) {
+                        System.out.println("설명: " + item.description());
+                        System.out.println("이미지: " + item.imageUrl());
+                    }
+                });
+            })
+            .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("여러 사용자의 A/B 그룹 배정 균형 확인")
+    void multipleUsersABGroupBalance() throws Exception {
+        // Given: 동일한 메뉴판 이미지
+        byte[] imageBytes = Files.readAllBytes(
+            Paths.get("src/test/resources/test-menu.jpg")
+        );
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+        MenuScanRequest request = new MenuScanRequest(
+            base64Image, "ja", "ko", "JPY", "KRW"
+        );
+
+        // When: 20명의 사용자로 테스트
+        int controlCount = 0;
+        int treatmentCount = 0;
+
+        for (int i = 0; i < 20; i++) {
+            String userId = "user-" + i;
+            var result = menuScanService.scanMenu(request, userId).block();
+
+            if (result.abGroup().equals("CONTROL")) {
+                controlCount++;
+            } else {
+                treatmentCount++;
+            }
+        }
+
+        // Then: 대략 50:50 비율
+        System.out.println("\n=== A/B 그룹 배정 결과 (20명) ===");
+        System.out.println("Control: " + controlCount + " (" + (controlCount * 5) + "%)");
+        System.out.println("Treatment: " + treatmentCount + " (" + (treatmentCount * 5) + "%)");
+
+        // 최소 20%는 각 그룹에 배정되어야 함 (통계적 유의성)
+        assertThat(controlCount).isGreaterThanOrEqualTo(4);
+        assertThat(treatmentCount).isGreaterThanOrEqualTo(4);
+    }
+}
+EOF
+```
+
+#### 테스트 실행
+
+```bash
+./gradlew test --tests FullPipelineE2ETest
+```
+
+#### 검증
+
+✅ **성공 조건**:
+- 전체 파이프라인 성공
+- 처리 시간 10초 이내 (목표: 5초)
+- A/B 분기 정확하게 동작
+- A/B 그룹 배정 균형 (대략 50:50)
+
+### Phase 4 체크리스트
+
+- [ ] FullPipelineE2ETest 작성 및 통과
+- [ ] H2 검증: 처리 시간 5초 이내 확인
+- [ ] A/B 그룹 분기 정확성 확인
+- [ ] A/B 그룹 배정 균형 확인
+
+---
+
+## 📋 Phase 5: 로컬 서버 실행 및 API 테스트
+
+### 목표
+- 실제 서버를 실행하여 API 엔드포인트 동작 확인
+- Postman 또는 curl로 수동 테스트
+
+---
+
+### 5.1 로컬 서버 실행
+
+#### 서버 시작
+
+```bash
+cd backend
+
+# 환경 변수 로드
+export $(cat .env | xargs)
+
+# 서버 실행
+./gradlew bootRun --args='--spring.profiles.active=dev'
+
+# 서버 정상 시작 확인
+# - "Started ServerApplication in X seconds" 메시지 확인
+# - 포트 8080 리스닝 확인
+```
+
+#### 서버 상태 확인
+
+```bash
+# 다른 터미널에서 확인
+curl http://localhost:8080/actuator/health
+
+# 예상 응답:
+# {"status":"UP"}
+```
+
+---
+
+### 5.2 Postman으로 API 테스트
+
+#### 테스트 케이스 1: 메뉴 스캔 (POST /api/menus/scan)
+
+##### 요청
+
+```http
+POST http://localhost:8080/api/menus/scan
+Content-Type: application/json
+
+{
+  "base64EncodedImage": "...(실제 base64 이미지)...",
+  "originLanguageName": "ja",
+  "userLanguageName": "ko",
+  "originCurrencyName": "JPY",
+  "userCurrencyName": "KRW"
+}
+```
+
+##### base64 이미지 생성 (Mac/Linux)
+
+```bash
+# 메뉴판 이미지를 base64로 인코딩
+base64 -i test-menu.jpg -o test-menu-base64.txt
+
+# 또는 한 줄로
+base64 -i test-menu.jpg | tr -d '\n' | pbcopy  # Mac: 클립보드에 복사
+```
+
+##### 예상 응답 (Treatment 그룹)
+
+```json
+{
+  "scanId": "123e4567-e89b-12d3-a456-426614174000",
+  "abGroup": "TREATMENT",
+  "items": [
+    {
+      "id": "789e4567-e89b-12d3-a456-426614174001",
+      "originalName": "寿司",
+      "translatedName": "스시",
+      "description": "신선한 생선과 밥으로 만든 일본 전통 요리",
+      "imageUrl": "https://www.tasteatlas.com/images/dishes/sushi.jpg",
+      "priceInfo": {
+        "originalAmount": 1500,
+        "originalCurrency": "JPY",
+        "originalFormatted": "¥1,500",
+        "convertedAmount": 15300,
+        "convertedCurrency": "KRW",
+        "convertedFormatted": "₩15,300",
+        "exchangeRate": 10.2
+      }
+    }
+  ],
+  "processingTime": 3.8
+}
+```
+
+##### 예상 응답 (Control 그룹)
+
+```json
+{
+  "scanId": "123e4567-e89b-12d3-a456-426614174000",
+  "abGroup": "CONTROL",
+  "items": [
+    {
+      "id": "789e4567-e89b-12d3-a456-426614174001",
+      "originalName": "寿司",
+      "translatedName": "스시",
+      "description": null,
+      "imageUrl": null,
+      "priceInfo": {
+        "originalAmount": 1500,
+        "originalCurrency": "JPY",
+        "originalFormatted": "¥1,500",
+        "convertedAmount": 15300,
+        "convertedCurrency": "KRW",
+        "convertedFormatted": "₩15,300",
+        "exchangeRate": 10.2
+      }
+    }
+  ],
+  "processingTime": 2.1
+}
+```
+
+---
+
+#### 테스트 케이스 2: 설문 제출 (POST /api/surveys)
+
+##### 요청
+
+```http
+POST http://localhost:8080/api/surveys
+Content-Type: application/json
+
+{
+  "scanId": "123e4567-e89b-12d3-a456-426614174000",
+  "hasConfidence": true
+}
+```
+
+##### 예상 응답
+
+```json
+{
+  "surveyId": "456e4567-e89b-12d3-a456-426614174002",
+  "scanId": "123e4567-e89b-12d3-a456-426614174000",
+  "hasConfidence": true,
+  "submittedAt": "2025-01-15T10:30:00Z"
+}
+```
+
+---
+
+### 5.3 curl로 테스트 (선택)
+
+#### 메뉴 스캔
+
+```bash
+# base64 이미지 변수로 저장
+BASE64_IMAGE=$(base64 -i test-menu.jpg | tr -d '\n')
+
+# API 호출
+curl -X POST http://localhost:8080/api/menus/scan \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"base64EncodedImage\": \"$BASE64_IMAGE\",
+    \"originLanguageName\": \"ja\",
+    \"userLanguageName\": \"ko\",
+    \"originCurrencyName\": \"JPY\",
+    \"userCurrencyName\": \"KRW\"
+  }" | jq .
+
+# jq: JSON 포맷팅 도구 (brew install jq)
+```
+
+#### 설문 제출
+
+```bash
+curl -X POST http://localhost:8080/api/surveys \
+  -H "Content-Type: application/json" \
+  -d '{
+    "scanId": "123e4567-e89b-12d3-a456-426614174000",
+    "hasConfidence": true
+  }' | jq .
+```
+
+---
+
+### Phase 5 체크리스트
+
+- [ ] 로컬 서버 정상 시작
+- [ ] Postman POST /api/menus/scan 테스트 성공
+- [ ] Treatment 그룹 응답에 사진+설명 포함 확인
+- [ ] Control 그룹 응답에 사진+설명 없음 확인
+- [ ] Postman POST /api/surveys 테스트 성공
+- [ ] 처리 시간 10초 이내 확인
+
+---
+
+## 📋 Phase 6: AWS 환경 설정
+
+### 목표
+- AWS RDS (MySQL) 설정
+- AWS ElastiCache (Redis) 설정
+- AWS EC2 또는 Elastic Beanstalk 설정 (배포용)
+
+---
+
+### 6.1 AWS RDS (MySQL) 설정
+
+#### AWS Console 설정
+
+1. **AWS Console 로그인** → RDS 서비스
+2. **데이터베이스 생성** 클릭
+3. 다음 설정:
+   - **엔진**: MySQL 8.0
+   - **템플릿**: 프리 티어 (개발용) 또는 프로덕션
+   - **DB 인스턴스 식별자**: `foodiepass-mvp-db`
+   - **마스터 사용자 이름**: `admin`
+   - **마스터 암호**: (안전한 비밀번호 생성)
+   - **DB 인스턴스 클래스**: `db.t3.micro` (프리 티어)
+   - **스토리지**: 20GB
+   - **퍼블릭 액세스**: 예 (개발 중에만, 프로덕션에서는 VPC 내부)
+   - **VPC 보안 그룹**: 새로 생성 또는 기존 선택
+4. **데이터베이스 생성** 클릭
+
+#### 보안 그룹 설정
+
+1. RDS 인스턴스 선택 → **연결 및 보안** 탭
+2. 보안 그룹 클릭
+3. **인바운드 규칙 편집**:
+   - **유형**: MySQL/Aurora
+   - **포트**: 3306
+   - **소스**: 내 IP (개발용) 또는 0.0.0.0/0 (주의: 보안 위험)
+4. 규칙 저장
+
+#### 엔드포인트 확인
+
+```bash
+# RDS 엔드포인트 복사 (예시):
+# foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com
+```
+
+#### 로컬에서 연결 테스트
+
+```bash
+# MySQL 클라이언트 설치 (Mac)
+brew install mysql-client
+
+# 연결 테스트
+mysql -h foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com \
+      -u admin -p
+
+# 비밀번호 입력 후 연결 확인
+```
+
+#### 데이터베이스 생성
+
+```sql
+-- MySQL 접속 후
+CREATE DATABASE foodiepass_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+SHOW DATABASES;
+USE foodiepass_db;
+```
+
+---
+
+### 6.2 AWS ElastiCache (Redis) 설정
+
+#### AWS Console 설정
+
+1. **AWS Console** → ElastiCache 서비스
+2. **Redis 클러스터 생성** 클릭
+3. 다음 설정:
+   - **클러스터 엔진**: Redis
+   - **위치**: AWS Cloud
+   - **클러스터 모드**: 비활성화
+   - **이름**: `foodiepass-redis`
+   - **노드 유형**: `cache.t3.micro` (프리 티어)
+   - **복제본 수**: 0 (개발용)
+   - **서브넷 그룹**: 기본 또는 새로 생성
+   - **보안 그룹**: RDS와 동일한 VPC
+4. **생성** 클릭
+
+#### 보안 그룹 설정
+
+1. ElastiCache 클러스터 선택
+2. 보안 그룹 수정:
+   - **유형**: 사용자 지정 TCP
+   - **포트**: 6379
+   - **소스**: 내 IP 또는 EC2 보안 그룹
+
+#### 엔드포인트 확인
+
+```bash
+# Redis 엔드포인트 복사 (예시):
+# foodiepass-redis.abcd12.0001.use1.cache.amazonaws.com:6379
+```
+
+---
+
+### 6.3 backend/.env 파일 업데이트 (AWS 프로덕션용)
+
+```bash
+cd backend
+
+# .env.prod 파일 생성 (프로덕션용)
+cat > .env.prod << 'EOF'
+# ====================================
+# Google Cloud Configuration
+# ====================================
+GOOGLE_CREDENTIALS_PATH=/app/foodiepass-credentials.json
+GCP_PROJECT_ID=your-project-id
+GCP_LOCATION=us-central1
+GEMINI_MODEL_VISION=gemini-1.5-flash
+GEMINI_MODEL_PRO=gemini-1.5-pro
+
+# ====================================
+# AWS RDS (MySQL)
+# ====================================
+SPRING_DATASOURCE_URL=jdbc:mysql://foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com:3306/foodiepass_db
+SPRING_DATASOURCE_USERNAME=admin
+SPRING_DATASOURCE_PASSWORD=your-rds-password
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+# ====================================
+# AWS ElastiCache (Redis)
+# ====================================
+SPRING_REDIS_HOST=foodiepass-redis.abcd12.0001.use1.cache.amazonaws.com
+SPRING_REDIS_PORT=6379
+
+# ====================================
+# TasteAtlas Configuration
+# ====================================
+TASTE_ATLAS_API_URL=https://www.tasteatlas.com/api/search
+TASTE_ATLAS_AUTH_TOKEN=
+TASTE_ATLAS_BASE_URL=https://www.tasteatlas.com
+TASTE_ATLAS_DEFAULT_IMAGE_URL=https://via.placeholder.com/400
+TASTE_ATLAS_DEFAULT_DESCRIPTION=음식 정보를 불러올 수 없습니다
+TASTE_ATLAS_SELECTOR_IMAGE=img.food-image
+TASTE_ATLAS_SELECTOR_DESCRIPTION=div.description
+
+# ====================================
+# Google Finance Configuration
+# ====================================
+GOOGLE_FINANCE_URL_FORMAT=https://www.google.com/finance/quote/%s-%s
+GOOGLE_FINANCE_SELECTOR=div.YMlKec.fxKbKc
+
+# ====================================
+# Production Profile
+# ====================================
+SPRING_PROFILES_ACTIVE=prod
+EOF
+
+# 실제 값으로 교체
+# - your-project-id
+# - your-rds-password
+# - RDS/Redis 엔드포인트
+```
+
+---
+
+### Phase 6 체크리스트
+
+- [ ] AWS RDS MySQL 인스턴스 생성
+- [ ] RDS 보안 그룹 설정 (포트 3306 오픈)
+- [ ] RDS 엔드포인트 확인
+- [ ] MySQL 클라이언트로 연결 테스트
+- [ ] foodiepass_db 데이터베이스 생성
+- [ ] AWS ElastiCache Redis 클러스터 생성
+- [ ] Redis 보안 그룹 설정 (포트 6379 오픈)
+- [ ] Redis 엔드포인트 확인
+- [ ] .env.prod 파일 생성 및 값 설정
+
+---
+
+## 📋 Phase 7: AWS 배포 및 검증
+
+### 목표
+- Spring Boot 애플리케이션을 AWS에 배포
+- 프로덕션 환경에서 API 동작 확인
+
+---
+
+### 7.1 배포 방법 선택
+
+#### 옵션 1: AWS EC2 (권장 - 유연성)
+
+**장점**: 완전한 제어, 다양한 설정 가능
+**단점**: 인프라 관리 필요
+
+#### 옵션 2: AWS Elastic Beanstalk (간단)
+
+**장점**: 관리형 서비스, 배포 자동화
+**단점**: 제한된 설정
+
+#### 옵션 3: Docker + ECS/Fargate (현대적)
+
+**장점**: 컨테이너화, 확장성
+**단점**: Docker 지식 필요
+
+---
+
+### 7.2 배포 (옵션 1: AWS EC2)
+
+#### EC2 인스턴스 생성
+
+1. **AWS Console** → EC2 서비스
+2. **인스턴스 시작** 클릭
+3. 설정:
+   - **AMI**: Ubuntu Server 22.04 LTS
+   - **인스턴스 유형**: `t3.micro` (프리 티어)
+   - **키 페어**: 새로 생성 또는 기존 선택 (SSH 접속용)
+   - **보안 그룹**:
+     - SSH (포트 22): 내 IP
+     - HTTP (포트 80): 0.0.0.0/0
+     - 사용자 지정 TCP (포트 8080): 0.0.0.0/0
+4. **인스턴스 시작**
+
+#### EC2 접속 및 환경 설정
+
+```bash
+# SSH 접속
+ssh -i "your-key.pem" ubuntu@ec2-xx-xx-xx-xx.compute-1.amazonaws.com
+
+# 시스템 업데이트
+sudo apt update && sudo apt upgrade -y
+
+# Java 21 설치
+sudo apt install openjdk-21-jdk -y
+java -version
+
+# Git 설치
+sudo apt install git -y
+```
+
+#### 애플리케이션 배포
+
+```bash
+# 프로젝트 클론
+git clone https://github.com/your-username/foodiePass.git
+cd foodiePass/backend
+
+# 환경 변수 설정
+nano .env.prod
+# (로컬의 .env.prod 내용 복사)
+
+# Google Cloud credentials.json 업로드
+# (로컬에서 scp로 업로드)
+```
+
+#### 로컬에서 credentials.json 업로드
+
+```bash
+# 로컬 터미널에서 실행
+scp -i "your-key.pem" \
+    ~/foodiepass-credentials.json \
+    ubuntu@ec2-xx-xx-xx-xx.compute-1.amazonaws.com:/home/ubuntu/foodiepass-credentials.json
+```
+
+#### EC2에서 애플리케이션 빌드 및 실행
+
+```bash
+# EC2에서 계속
+cd ~/foodiePass/backend
+
+# 환경 변수 로드
+export $(cat .env.prod | xargs)
+export GOOGLE_CREDENTIALS_PATH=/home/ubuntu/foodiepass-credentials.json
+
+# 빌드
+./gradlew build -x test
+
+# 실행
+nohup ./gradlew bootRun --args='--spring.profiles.active=prod' > app.log 2>&1 &
+
+# 로그 확인
+tail -f app.log
+```
+
+#### 서버 상태 확인
+
+```bash
+# 다른 터미널에서
+curl http://ec2-xx-xx-xx-xx.compute-1.amazonaws.com:8080/actuator/health
+```
+
+---
+
+### 7.3 프로덕션 API 테스트
+
+#### Postman으로 테스트
+
+##### 메뉴 스캔
+
+```http
+POST http://ec2-xx-xx-xx-xx.compute-1.amazonaws.com:8080/api/menus/scan
+Content-Type: application/json
+
+{
+  "base64EncodedImage": "...",
+  "originLanguageName": "ja",
+  "userLanguageName": "ko",
+  "originCurrencyName": "JPY",
+  "userCurrencyName": "KRW"
+}
+```
+
+##### 설문 제출
+
+```http
+POST http://ec2-xx-xx-xx-xx.compute-1.amazonaws.com:8080/api/surveys
+Content-Type: application/json
+
+{
+  "scanId": "...",
+  "hasConfidence": true
+}
+```
+
+---
+
+### 7.4 프로덕션 모니터링 (선택)
+
+#### AWS CloudWatch 로그 설정
+
+```bash
+# EC2에서
+sudo apt install awscli -y
+
+# CloudWatch Logs Agent 설치
+# (AWS 공식 문서 참고)
+```
+
+#### 애플리케이션 로그 확인
+
+```bash
+# EC2에서
+tail -f ~/foodiePass/backend/app.log
+```
+
+---
+
+### Phase 7 체크리스트
+
+- [ ] EC2 인스턴스 생성 및 설정
+- [ ] EC2에 SSH 접속 성공
+- [ ] Java 21, Git 설치
+- [ ] 프로젝트 클론
+- [ ] .env.prod 설정
+- [ ] credentials.json 업로드
+- [ ] 애플리케이션 빌드 성공
+- [ ] 애플리케이션 실행 성공 (nohup)
+- [ ] Postman으로 프로덕션 API 테스트 성공
+- [ ] RDS 및 Redis 연결 확인
+
+---
+
+## 🎯 전체 체크리스트 요약
+
+### Phase 1: Google Cloud 설정 (로컬)
+- [ ] Google Cloud 프로젝트 생성
+- [ ] Vertex AI API, Cloud Translation API 활성화
+- [ ] 서비스 계정 생성 및 credentials.json 다운로드
+- [ ] backend/.env 파일 생성
+- [ ] 환경 변수 로드 확인
+
+### Phase 2: 개별 API 단위 테스트 (로컬)
+- [ ] GeminiOcrIntegrationTest 통과
+- [ ] GoogleTranslationIntegrationTest 통과
+- [ ] TasteAtlasFoodScrapperIntegrationTest 통과
+- [ ] GoogleFinanceRateProviderIntegrationTest 통과
+
+### Phase 3: 부분 통합 테스트 (로컬)
+- [ ] OcrTranslationIntegrationTest 통과
+
+### Phase 4: 전체 E2E 테스트 (로컬)
+- [ ] FullPipelineE2ETest 통과
+- [ ] H2 검증: 처리 시간 5초 이내
+- [ ] A/B 그룹 배정 균형 확인
+
+### Phase 5: 로컬 서버 테스트
+- [ ] 로컬 서버 실행 성공
+- [ ] Postman POST /api/menus/scan 테스트 성공
+- [ ] Postman POST /api/surveys 테스트 성공
+
+### Phase 6: AWS 환경 설정
+- [ ] AWS RDS MySQL 인스턴스 생성
+- [ ] AWS ElastiCache Redis 클러스터 생성
+- [ ] .env.prod 파일 생성
+
+### Phase 7: AWS 배포 및 검증
+- [ ] EC2 인스턴스 생성 및 설정
+- [ ] 애플리케이션 배포
+- [ ] 프로덕션 API 테스트 성공
+
+---
+
+## 📊 성공 기준
+
+### 기술 검증 (H2)
+- ✅ OCR 정확도: 메뉴 이름과 가격 추출 성공
+- ✅ 번역 정확도: 의미 있는 번역 결과
+- ✅ 음식 매칭: 관련 있는 이미지와 설명 (연관성 ≥ 70%)
+- ✅ 환율 정확도: 실시간 환율 조회 성공 (정확도 ≥ 95%)
+- ✅ 처리 시간: 5초 이내 (목표)
+
+### A/B 테스트 검증
+- ✅ Control 그룹: 텍스트 + 가격만
+- ✅ Treatment 그룹: 사진 + 설명 + 텍스트 + 가격
+- ✅ 그룹 배정: 대략 50:50 비율
+
+### 프로덕션 검증
+- ✅ AWS 환경에서 안정적으로 동작
+- ✅ RDS 및 Redis 연결 성공
+- ✅ 외부 API 호출 성공
+
+---
+
+## 🚨 문제 해결 가이드
+
+### Google Cloud 관련
+**문제**: API 호출 실패 (403, 401)
+- credentials.json 경로 확인: `echo $GOOGLE_CREDENTIALS_PATH`
+- 서비스 계정 권한 확인: Vertex AI User, Cloud Translation API User
+- API 활성화 확인: Google Cloud Console → API 및 서비스
+- 프로젝트 ID 확인: `echo $GCP_PROJECT_ID`
+
+**문제**: Quota 초과
+- Google Cloud Console → API & Services → Quotas
+- 무료 할당량 확인
+- 필요시 결제 계정 연결
+
+### TasteAtlas 스크래핑 관련
+**문제**: 스크래핑 실패
+- 웹사이트 구조 변경 가능성 → 셀렉터 업데이트 필요
+- 기본값(Fallback) 동작 확인: 플레이스홀더 이미지 및 기본 설명 사용
+
+### 환율 조회 관련
+**문제**: Google Finance 스크래핑 실패
+- URL 형식 확인: `GOOGLE_FINANCE_URL_FORMAT`
+- 셀렉터 업데이트 필요
+- 대체 환율 API 고려 (예: ExchangeRate-API)
+
+### AWS 관련
+**문제**: RDS 연결 실패
+- 보안 그룹 인바운드 규칙 확인 (포트 3306)
+- RDS 엔드포인트 확인
+- 비밀번호 확인
+
+**문제**: Redis 연결 실패
+- 보안 그룹 인바운드 규칙 확인 (포트 6379)
+- Redis 엔드포인트 확인
+- VPC 설정 확인
+
+**문제**: EC2 SSH 접속 불가
+- 키 페어 권한 확인: `chmod 400 your-key.pem`
+- 보안 그룹에 SSH (포트 22) 규칙 추가
+- 퍼블릭 IP 확인
+
+---
+
+## 📝 진행 상황 기록
+
+| Phase | 시작일 | 완료일 | 상태 | 비고 |
+|-------|--------|--------|------|------|
+| Phase 1 | | | ⏳ Pending | Google Cloud 설정 (로컬) |
+| Phase 2 | | | ⏳ Pending | 개별 API 단위 테스트 (로컬) |
+| Phase 3 | | | ⏳ Pending | 부분 통합 테스트 (로컬) |
+| Phase 4 | | | ⏳ Pending | 전체 E2E 테스트 (로컬) |
+| Phase 5 | | | ⏳ Pending | 로컬 서버 실행 및 API 테스트 |
+| Phase 6 | | | ⏳ Pending | AWS 환경 설정 |
+| Phase 7 | | | ⏳ Pending | AWS 배포 및 검증 |
+
+---
+
+## 🎓 학습 포인트
+
+이 과정을 통해:
+1. **외부 API 통합 테스트 방법** 학습
+2. **점진적 통합 전략** 실습 (Phase 2 → 3 → 4)
+3. **로컬 개발 환경과 AWS 프로덕션 환경 분리** 경험
+4. **AWS RDS, ElastiCache, EC2 사용법** 익히기
+5. **실제 서비스 배포 준비** 경험
+6. **문제 해결 능력** 향상
+
+---
+
+## 🚀 다음 단계
+
+### 현재 상태에 따른 진행 방법
+
+#### 지금 바로 시작하려면:
+1. **Phase 1부터 순차적으로 진행**
+2. 각 Phase의 체크리스트를 하나씩 완료
+3. 문제 발생 시 "문제 해결 가이드" 참고
+
+#### 준비가 필요하면:
+1. 전체 문서 읽고 계획 파악
+2. 필요한 것들 체크 (Google Cloud 계정, AWS 계정)
+3. 준비 완료 후 Phase 1 시작
+
+---
+
+**다음 실행 명령**: `cd backend && cat > .env << 'EOF' ...` (Phase 1.4부터 시작)
