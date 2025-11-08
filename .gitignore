@@ -110,17 +110,28 @@ Thumbs.db
 # ===============================================================
 HELP.md
 
-*.yml
-*.yaml
-
 # ===============================================================
 # Credentials & Sensitive Info (인증서 및 민감 정보)
 # ===============================================================
-*.json
+
+# Google Cloud credentials (JSON files in resources)
+backend/src/main/resources/*.json
+backend/src/test/resources/*.json
+**/bold-lantern-*.json
+**/foodiepass-*.json
 
 # Environment files
 backend/env.*
 backend/.env*
+
+# Python virtual environment
+scripts/.venv/
+scripts/__pycache__/
+*.pyc
+
+# Claude settings (local)
+.claude/settings.local.json
+**/.claude/settings.local.json
 
 # ===============================================================
 # Backups & Temporary Files (백업 및 임시 파일)

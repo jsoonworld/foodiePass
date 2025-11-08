@@ -1,0 +1,75 @@
+# application-integration-test.yml
+# Integration test profile for actual API calls
+spring:
+  datasource:
+    url: jdbc:h2:mem:integrationdb;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  cache:
+    type: none
+
+logging:
+  level:
+    foodiepass.server.menu.infra.scraper.gemini: DEBUG
+    foodiepass.server.menu.infra: DEBUG
+
+google:
+  credential:
+    path: "foodiepass-441715-8ac0a9a371d1.json"
+  project-id: "foodiepass-441715"
+  location: "us-central1"
+  auth:
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+  translation:
+    model: base
+  gemini:
+    api-key: "${GEMINI_API_KEY}"
+    model:
+      vision: "gemini-2.5-pro"
+      pro: "gemini-2.5-pro"
+
+jsoup:
+  google-finance:
+    url-format: "https://www.google.com/finance/quote/%s-%s"
+    selector: "div.YMlKec.fxKbKc"
+
+taste-atlas:
+  api:
+    url: "https://www.tasteatlas.com/api/search"
+    auth-token: ""
+  baseUrl: "https://www.tasteatlas.com"
+  defaults:
+    imageUrl: "https://via.placeholder.com/400"
+    description: "음식 정보를 불러올 수 없습니다"
+  selector:
+    image: "img.food-image"
+    description: "div.description"
+
+resilience4j.circuitbreaker:
+  instances:
+    exchangeRate:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 10
+      sliding-window-type: COUNT_BASED
+      sliding-window-size: 10
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    tasteAtlas:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    gemini:
+      failure-rate-threshold: 60
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
