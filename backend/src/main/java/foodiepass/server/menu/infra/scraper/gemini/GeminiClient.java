@@ -10,6 +10,7 @@ import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -39,6 +40,7 @@ public class GeminiClient {
     }
 
     @CircuitBreaker(name = "gemini", fallbackMethod = "fallbackGenerateText")
+    @RateLimiter(name = "gemini")
     public String generateText(final String prompt) {
         try {
             final GenerateContentResponse apiResponse = textModel.generateContent(ContentMaker.fromString(prompt));
@@ -49,6 +51,7 @@ public class GeminiClient {
     }
 
     @CircuitBreaker(name = "gemini", fallbackMethod = "fallbackGenerateTextWithImage")
+    @RateLimiter(name = "gemini")
     public String generateText(final ByteString imageBytes, final String mimeType, final String prompt) {
         try {
             final GenerateContentResponse apiResponse = multimodalModel.generateContent(

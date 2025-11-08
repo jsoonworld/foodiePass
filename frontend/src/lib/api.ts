@@ -15,7 +15,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds timeout
+  timeout: 150000, // 150 seconds timeout (menu processing can take up to 2 minutes)
 });
 
 // Request interceptor for logging and adding request metadata

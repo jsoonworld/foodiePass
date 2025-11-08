@@ -7,6 +7,7 @@ import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component("tasteAtlasFoodScrapper")
-@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
+@Profile("!local & !performance-test")  // local 환경에서는 MockFoodScrapper 사용
 @RequiredArgsConstructor
 public class TasteAtlasFoodScrapper implements FoodScrapper {
 
@@ -34,8 +35,10 @@ public class TasteAtlasFoodScrapper implements FoodScrapper {
 
     @Override
     public Flux<FoodInfo> scrapAsync(final List<String> foodNames) {
+        log.info("배치 스크래핑 시작: {} 개 음식", foodNames.size());
         return Flux.fromIterable(foodNames)
-                .flatMap(this::getFoodInfo);
+                .delayElements(Duration.ofMillis(300))  // 각 요청 사이 0.3초 대기
+                .flatMap(this::getFoodInfo, 3);  // 최대 3개씩 동시 처리
     }
 
     private Mono<FoodInfo> getFoodInfo(String foodName) {

@@ -26,18 +26,33 @@ logging:
     org.hibernate.SQL: debug
     foodiepass.server: debug
 
+# Spring MVC async request timeout (3 minutes)
+spring.mvc.async.request-timeout: 180000
+
 # Mock configurations for local development
 taste-atlas:
+  enabled: false  # Temporarily disabled due to API connection issues
   api:
     url: "https://www.tasteatlas.com/api"
     auth-token: "mock-token"
   base-url: "https://www.tasteatlas.com"
-  default:
+  defaults:
     image-url: "https://via.placeholder.com/300x200?text=Food+Image"
     description: "No description available"
   selector:
     image: "img.food-image"
     description: ".food-description"
+
+# Spoonacular API Configuration
+spoonacular:
+  api-key: "${SPOONACULAR_API_KEY:your-api-key-here}"
+  api:
+    base-url: "https://api.spoonacular.com"
+    search-path: "/food/menuItems/search"
+    max-results: 1
+  defaults:
+    image-url: "https://via.placeholder.com/300x200?text=Food+Image"
+    description: "No description available"
 
 google:
   credential:
@@ -58,3 +73,24 @@ jsoup:
   google-finance:
     url-format: "https://www.google.com/finance/quote/%s-%s"
     selector: "div.YMlKec.fxKbKc"
+
+# Resilience4j Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      gemini:
+        sliding-window-size: 10
+        failure-rate-threshold: 80
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        minimum-number-of-calls: 5
+        record-exceptions:
+          - io.grpc.StatusRuntimeException
+          - foodiepass.server.menu.infra.exception.GeminiException
+
+  ratelimiter:
+    instances:
+      gemini:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 5s
