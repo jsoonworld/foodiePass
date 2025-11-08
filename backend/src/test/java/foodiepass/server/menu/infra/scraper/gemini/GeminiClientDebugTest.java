@@ -30,7 +30,7 @@ class GeminiClientDebugTest {
         final String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
         final ByteString byteStringImage = ByteString.copyFrom(Base64.getDecoder().decode(base64EncodedImage));
 
-        final String prompt = "Given a menu image, please extract and print the names and prices of the food items in JSON format. Follow the structure below for each item:\n\n[{\"name\": \"Name of the Food (String)\", \"price\": Price of the Food (double)}, ...]";
+        final String prompt = GeminiOcrReader.JSON_EXTRACT_PROMPT_MESSAGE;
 
         System.out.println("=== Calling Gemini API ===");
         System.out.println("Prompt: " + prompt);

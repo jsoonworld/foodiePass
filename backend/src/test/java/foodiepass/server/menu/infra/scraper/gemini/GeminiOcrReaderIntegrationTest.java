@@ -2,6 +2,7 @@ package foodiepass.server.menu.infra.scraper.gemini;
 
 import foodiepass.server.menu.application.port.out.OcrReader;
 import foodiepass.server.menu.domain.MenuItem;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +23,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("GeminiOcrReader 통합 테스트 - 실제 Gemini API 호출")
 class GeminiOcrReaderIntegrationTest {
 
+    private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";
+
     @Autowired
     private OcrReader ocrReader;
 
+    private String base64EncodedImage;
+    private byte[] imageBytes;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        final Path imagePath = Paths.get(TEST_IMAGE_PATH);
+        imageBytes = Files.readAllBytes(imagePath);
+        base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
+    }
+
     @Test
     @DisplayName("일본어 메뉴판 이미지에서 메뉴 아이템을 추출한다")
-    void read_withJapaneseMenuImage_extractsMenuItems() throws IOException {
-        // given: 테스트용 일본어 메뉴판 이미지를 base64로 인코딩
-        final Path imagePath = Paths.get("src/test/resources/images/test-menu.jpg");
-        final byte[] imageBytes = Files.readAllBytes(imagePath);
-        final String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
-
+    void read_withJapaneseMenuImage_extractsMenuItems() {
+        // given: 테스트용 일본어 메뉴판 이미지 (setUp에서 준비됨)
         System.out.println("=== Starting OCR Test ===");
         System.out.println("Image size: " + imageBytes.length + " bytes");
         System.out.println("Base64 length: " + base64EncodedImage.length());
@@ -80,12 +89,9 @@ class GeminiOcrReaderIntegrationTest {
 
     @Test
     @DisplayName("일본어 메뉴판에서 특정 음식 이름이 포함되어야 한다")
-    void read_withJapaneseMenuImage_containsExpectedFoodNames() throws IOException {
-        // given: 테스트용 일본어 메뉴판 이미지
+    void read_withJapaneseMenuImage_containsExpectedFoodNames() {
+        // given: 테스트용 일본어 메뉴판 이미지 (setUp에서 준비됨)
         // 이미지 내용: メニュー, スシ ¥1000, ラーメン ¥800, 天ぷら ¥1200, カレー ¥900
-        final Path imagePath = Paths.get("src/test/resources/images/test-menu.jpg");
-        final byte[] imageBytes = Files.readAllBytes(imagePath);
-        final String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
 
         // when: OCR 수행
         final List<MenuItem> menuItems = ocrReader.read(base64EncodedImage);
@@ -98,18 +104,28 @@ class GeminiOcrReaderIntegrationTest {
         System.out.println("=== Extracted Names ===");
         extractedNames.forEach(System.out::println);
 
-        // 최소 하나의 음식 이름이 일본어 또는 번역된 형태로 포함되어야 함
-        // Gemini가 일본어를 그대로 반환하거나 영어로 번역할 수 있음
-        assertThat(extractedNames).isNotEmpty();
+        // Gemini가 일본어를 그대로 반환하거나 영어로 번역할 수 있으므로
+        // 예상 키워드 중 일부가 포함되어 있는지 확인
+        final List<String> expectedKeywords = List.of(
+            "スシ", "Sushi", "寿司",
+            "ラーメン", "Ramen",
+            "天ぷら", "Tempura",
+            "カレー", "Curry"
+        );
+
+        boolean containsExpectedItem = extractedNames.stream()
+            .anyMatch(name -> expectedKeywords.stream()
+                .anyMatch(keyword -> name.toLowerCase().contains(keyword.toLowerCase())));
+
+        assertThat(containsExpectedItem)
+            .as("최소 하나의 예상 메뉴 항목이 추출되어야 함")
+            .isTrue();
     }
 
     @Test
     @DisplayName("메뉴판 이미지에서 가격 정보가 정확히 추출되어야 한다")
-    void read_withJapaneseMenuImage_extractsPricesCorrectly() throws IOException {
-        // given: 테스트용 일본어 메뉴판 이미지
-        final Path imagePath = Paths.get("src/test/resources/images/test-menu.jpg");
-        final byte[] imageBytes = Files.readAllBytes(imagePath);
-        final String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
+    void read_withJapaneseMenuImage_extractsPricesCorrectly() {
+        // given: 테스트용 일본어 메뉴판 이미지 (setUp에서 준비됨)
 
         // when: OCR 수행
         final List<MenuItem> menuItems = ocrReader.read(base64EncodedImage);
