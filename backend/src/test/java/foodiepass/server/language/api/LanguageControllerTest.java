@@ -1,6 +1,5 @@
 package foodiepass.server.language.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import foodiepass.server.language.application.LanguageService;
 import foodiepass.server.language.dto.response.LanguageResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,12 +31,9 @@ class LanguageControllerTest {
     @InjectMocks
     private LanguageController languageController;
 
-    private ObjectMapper objectMapper;
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(languageController).build();
-        objectMapper = new ObjectMapper();
     }
 
     @Test
