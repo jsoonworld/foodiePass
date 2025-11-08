@@ -1,0 +1,74 @@
+# application-test.yml
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  cache:
+    type: none
+
+google:
+  credential:
+    path: "bold-lantern-466505-c4-88a3d8340ac5.json"
+  project-id: "bold-lantern-466505-c4"
+  location: "asia-northeast3"
+  auth:
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+  translation:
+    model: base
+  gemini:
+    model:
+      vision: "gemini-1.5-flash-001"
+      pro: "gemini-1.5-pro-001"
+
+# 서킷 브레이커 적용 버전
+jsoup:
+  google-finance:
+    url-format: "https://www.google.com/finance/quote/%s-%s"
+    selector: "div.YMlKec.fxKbKc"
+
+#jsoup:
+#  google-finance:
+#    url-format: "http://localhost:[Mock 서버 포트번호]/finance/quote/%s-%s"
+#    selector: "div.YMlKec.fxKbKc"
+
+taste-atlas:
+  api:
+    url: "https://example.com"
+    auth-token: "test-token"
+  baseUrl: "https://example.com"
+  defaults:
+    imageUrl: "https://example.com/default.jpg"
+    description: "test-description"
+  selector:
+    image: ".image"
+    description: ".description"
+
+resilience4j.circuitbreaker:
+  instances:
+    exchangeRate:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 10
+      sliding-window-type: COUNT_BASED
+      sliding-window-size: 10
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    tasteAtlas:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    gemini:
+      failure-rate-threshold: 60
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
