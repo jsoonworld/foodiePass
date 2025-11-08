@@ -44,6 +44,10 @@ google:
     path: "foodiepass-441715-8ac0a9a371d1.json"
   project-id: "foodiepass-441715"
   location: "us-central1"
+  auth:
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+  translation:
+    model: "nmt"
   gemini:
     api-key: "${GEMINI_API_KEY}"
     model:
