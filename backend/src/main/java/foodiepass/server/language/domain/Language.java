@@ -17,6 +17,7 @@ import static foodiepass.server.language.exception.LanguageErrorCode.LANGUAGE_NO
 
 public enum Language {
 
+    AUTO("auto", "auto"),  // Automatic language detection (Gemini API supported)
     AFRIKAANS("Afrikaans", "af"),
     ALBANIAN("Albanian", "sq"),
     AMHARIC("Amharic", "am"),
@@ -180,7 +181,7 @@ public enum Language {
     }
 
     private static Language lookupByName(String languageName) {
-        return Optional.ofNullable(NAME_TO_LANGUAGE_MAP.get(languageName))
+        return Optional.ofNullable(NAME_TO_LANGUAGE_MAP.get(languageName.trim()))
                 .orElseThrow(() -> new LanguageException(LANGUAGE_NOT_FOUND));
     }
 

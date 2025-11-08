@@ -27,7 +27,7 @@
 public ReconfigureResponse reconfigure(ReconfigureRequest request) {
     // OCR → 번역 → 환율 → 음식 매칭 파이프라인
 }
-```
+```java
 
 **v2 활용 방법**:
 - ✅ 기존 `reconfigure` 메서드 그대로 사용
@@ -158,7 +158,7 @@ public class MenuService {
         );
     }
 }
-```
+```java
 
 **추가 DTO**:
 ```java
@@ -180,7 +180,7 @@ public record MenuScanResponse(
     List<FoodItemResponse> items,
     double processingTime
 ) {}
-```
+```bash
 
 ---
 
@@ -200,7 +200,7 @@ public record MenuScanResponse(
 public interface OcrReader {
     Mono<List<MenuItem>> readMenuItems(byte[] imageBytes, Language targetLanguage);
 }
-```
+```java
 **구현체**: `GeminiOcrReader` (재사용)
 
 ---
@@ -210,7 +210,7 @@ public interface OcrReader {
 public interface FoodScrapper {
     Mono<FoodInfo> scrap(String foodName);
 }
-```
+```java
 **구현체**: `TasteAtlasFoodScrapper` (재사용)
 
 ---
@@ -220,7 +220,7 @@ public interface FoodScrapper {
 public interface TranslationClient {
     Mono<String> translate(String text, Language source, Language target);
 }
-```
+```bash
 **구현체**: `GoogleTranslationClient` (재사용)
 
 ---
@@ -241,7 +241,7 @@ public class LanguageService {
         return Arrays.asList(Language.values());
     }
 }
-```
+```bash
 
 ---
 
@@ -257,7 +257,7 @@ public enum Language {
     JAPANESE("ja", "日本語"),
     // ...
 }
-```
+```bash
 
 ---
 
@@ -287,7 +287,7 @@ public class CurrencyService {
         return amount.multiply(rate);
     }
 }
-```
+```bash
 
 ---
 
@@ -303,7 +303,7 @@ public enum Currency {
     JPY("¥", "円"),
     // ...
 }
-```
+```bash
 
 ---
 
@@ -368,7 +368,7 @@ public enum Currency {
 **목적**: A/B 그룹 배정 및 관리
 
 **새로 작성할 파일**:
-```
+```text
 abtest/
 ├── domain/
 │   ├── ABGroup.java             # enum (CONTROL, TREATMENT)
@@ -379,7 +379,7 @@ abtest/
 │   └── ABTestController.java    # 관리자 API
 └── repository/
     └── MenuScanRepository.java  # JPA Repository
-```
+```java
 
 **구현 가이드**:
 ```java
@@ -406,7 +406,7 @@ public class ABTestService {
         return group;
     }
 }
-```
+```bash
 
 ---
 
@@ -415,7 +415,7 @@ public class ABTestService {
 **목적**: 설문 응답 수집 및 분석
 
 **새로 작성할 파일**:
-```
+```text
 survey/
 ├── domain/
 │   └── SurveyResponse.java      # 설문 응답 엔티티
@@ -430,7 +430,7 @@ survey/
 │       └── SurveyAnalytics.java
 └── repository/
     └── SurveyResponseRepository.java
-```
+```java
 
 **구현 가이드**:
 ```java
@@ -478,7 +478,7 @@ public class SurveyService {
         );
     }
 }
-```
+```bash
 
 ---
 
@@ -489,12 +489,12 @@ public class SurveyService {
 **기존 엔드포인트**: 유지
 ```java
 POST /api/menus/reconfigure  // 기존 엔드포인트 유지
-```
+```java
 
 **새 엔드포인트**: 추가
 ```java
 POST /api/menus/scan          // 새 엔드포인트 추가
-```
+```java
 
 **구현 예시**:
 ```java
@@ -523,7 +523,7 @@ public class MenuController {
         return ResponseEntity.ok(response);
     }
 }
-```
+```yaml
 
 ---
 
@@ -540,7 +540,7 @@ spring:
     redis:
       host: localhost
       port: 6379
-```
+```java
 
 **Redis Config**:
 ```java
@@ -549,7 +549,7 @@ spring:
 public class RedisConfig {
     // Spring Session 자동 설정
 }
-```
+```bash
 
 ---
 

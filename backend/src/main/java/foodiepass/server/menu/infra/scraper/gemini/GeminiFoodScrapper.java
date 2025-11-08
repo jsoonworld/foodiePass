@@ -8,19 +8,20 @@ import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component("geminiFoodScrapper")
-@Primary
 @Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
 public class GeminiFoodScrapper implements FoodScrapper {
@@ -40,8 +41,10 @@ public class GeminiFoodScrapper implements FoodScrapper {
 
     @Override
     public Flux<FoodInfo> scrapAsync(final List<String> foodNames) {
+        log.info("Gemini 배치 음식 정보 스크래핑 시작: {} 개 음식", foodNames.size());
         return Flux.fromIterable(foodNames)
-                .flatMap(this::getFoodInfoReactively);
+                .delayElements(Duration.ofMillis(500))  // 각 요청 사이 0.5초 대기
+                .flatMap(this::getFoodInfoReactively, 2);  // 최대 2개씩 동시 처리
     }
 
     private Mono<FoodInfo> getFoodInfoReactively(String foodName) {

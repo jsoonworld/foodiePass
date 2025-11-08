@@ -80,3 +80,7 @@ jacocoTestReport {
 		html.required = true
 	}
 }
+
+bootRun {
+	jvmArgs = ['-Xmx2048m', '-Xms512m']
+}

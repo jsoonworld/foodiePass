@@ -22,14 +22,14 @@
 ```bash
 cd backend
 ./gradlew bootRun --args='--spring.profiles.active=local'
-```
+```bash
 
 ### 테스트
 ```bash
 ./gradlew test
-```
+```bash
 
 ### 빌드
 ```bash
 ./gradlew clean build
-```
+```text

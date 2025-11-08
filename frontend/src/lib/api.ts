@@ -6,15 +6,16 @@ import type {
   SurveyResponse,
   LanguageResponse,
   CurrencyResponse,
+  GlobalResponse,
 } from './types';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_URL || '',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds timeout
+  timeout: 150000, // 150 seconds timeout (menu processing can take up to 2 minutes)
 });
 
 // Request interceptor for logging and adding request metadata
@@ -101,11 +102,11 @@ export async function submitSurvey(request: SurveyRequest): Promise<SurveyRespon
 }
 
 export async function getLanguages(): Promise<LanguageResponse[]> {
-  const response = await api.get<LanguageResponse[]>('/api/language');
-  return response.data;
+  const response = await api.get<GlobalResponse<LanguageResponse[]>>('/api/language');
+  return response.data.result;
 }
 
 export async function getCurrencies(): Promise<CurrencyResponse[]> {
-  const response = await api.get<CurrencyResponse[]>('/api/currency');
-  return response.data;
+  const response = await api.get<GlobalResponse<CurrencyResponse[]>>('/api/currency');
+  return response.data.result;
 }

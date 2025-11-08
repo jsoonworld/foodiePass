@@ -42,22 +42,31 @@ public class TasteAtlasApiClient implements Authenticatable {
     public Mono<TasteAtlasResponse> search(String foodName) {
         String searchQuery = String.format(properties.api().url(), foodName.replace(" ", "+"));
 
-        return webClient.get()
-                .uri(searchQuery)
-                .header(HttpHeaders.AUTHORIZATION, authToken)
-                .retrieve()
-                .bodyToMono(String.class)
-                .flatMap(this::parseResponse)
-                .onErrorMap(e -> !(e instanceof ScrapingException), e -> new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_API_REQUEST_FAILED));
+        // Use Jsoup.connect() like capstone project to avoid SSL issues
+        return Mono.fromCallable(() -> {
+            try {
+                String json = org.jsoup.Jsoup.connect(searchQuery)
+                        .header(HttpHeaders.AUTHORIZATION, authToken)
+                        .ignoreContentType(true)  // Required for JSON responses
+                        .execute()
+                        .body();
+                return objectMapper.readValue(json, TasteAtlasResponse.class);
+            } catch (Exception e) {
+                throw new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_API_REQUEST_FAILED);
+            }
+        });
     }
 
     @CircuitBreaker(name = "tasteAtlas", fallbackMethod = "fallbackFetchHtml")
     public Mono<String> fetchHtml(final String url) {
-        return WebClient.create().get()
-                .uri(url)
-                .retrieve()
-                .bodyToMono(String.class)
-                .onErrorMap(e -> new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_HTML_FETCH_FAILED));
+        // Use Jsoup.connect() like capstone project to avoid SSL issues
+        return Mono.fromCallable(() -> {
+            try {
+                return org.jsoup.Jsoup.connect(url).get().html();
+            } catch (Exception e) {
+                throw new ScrapingException(ScrapingErrorCode.TASTE_ATLAS_HTML_FETCH_FAILED);
+            }
+        });
     }
 
     private Mono<TasteAtlasResponse> parseResponse(String body) {

@@ -75,7 +75,7 @@
 - `TranslationClient`: 번역 (Google Translation 구현체)
 
 **파일 위치**:
-```
+```text
 menu/
 ├── application/
 │   ├── MenuService.java                    # 파이프라인 조율

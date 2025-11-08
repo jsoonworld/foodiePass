@@ -52,7 +52,7 @@ CREATE TABLE menu_scans (
     INDEX idx_ab_group (ab_group),
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='메뉴 스캔 세션';
-```
+```text
 
 **컬럼 설명**:
 
@@ -96,7 +96,7 @@ CREATE TABLE survey_responses (
     INDEX idx_created_at (created_at),
     UNIQUE KEY uk_scan_id (scan_id) COMMENT '중복 응답 방지'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='설문 응답';
-```
+```text
 
 **컬럼 설명**:
 
@@ -122,7 +122,7 @@ CREATE TABLE survey_responses (
 
 ## ERD (Entity Relationship Diagram)
 
-```
+```text
 ┌──────────────────┐
 │   menu_scans     │
 ├──────────────────┤
@@ -149,7 +149,7 @@ CREATE TABLE survey_responses (
 │ has_confidence   │
 │ created_at       │
 └──────────────────┘
-```
+```bash
 
 **참고**: MenuItem은 별도 테이블이 아닌 Value Object로, `menu_items_json` 컬럼에 JSON 배열로 저장됩니다.
 
@@ -162,7 +162,7 @@ CREATE TABLE survey_responses (
 #### V1__initial_schema.sql (기존)
 ```sql
 -- 기존 v1 스키마 (있다면)
-```
+```sql
 
 #### V2__create_menu_scan_tables.sql (신규)
 ```sql
@@ -196,7 +196,7 @@ CREATE TABLE survey_responses (
     INDEX idx_created_at (created_at),
     UNIQUE KEY uk_scan_id (scan_id) COMMENT '중복 응답 방지'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='설문 응답';
-```
+```java
 
 ---
 
@@ -263,7 +263,7 @@ public class MenuScan {
         return objectMapper.readValue(menuItemsJson, new TypeReference<List<MenuItem>>() {});
     }
 }
-```
+```bash
 
 **참고**:
 - MenuItem은 **Value Object**로, 별도 테이블이 없습니다.
@@ -306,7 +306,7 @@ public class SurveyResponse {
         }
     }
 }
-```
+```bash
 
 ---
 
@@ -345,7 +345,7 @@ FROM
      FROM survey_responses WHERE ab_group = 'CONTROL') c,
     (SELECT AVG(CASE WHEN has_confidence = TRUE THEN 1.0 ELSE 0.0 END) as yes_rate
      FROM survey_responses WHERE ab_group = 'TREATMENT') t;
-```
+```bash
 
 ---
 

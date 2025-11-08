@@ -87,7 +87,7 @@ public interface ABTestService {
      */
     ABTestResult getResults();
 }
-```
+```java
 
 ### Data Contracts
 
@@ -97,7 +97,7 @@ public enum ABGroup {
     CONTROL,    // Text + currency only
     TREATMENT   // Photos + descriptions + text + currency
 }
-```
+```java
 
 #### MenuScan (entity)
 ```java
@@ -114,7 +114,7 @@ public class MenuScan {
 
     // Getters only (immutable after creation)
 }
-```
+```java
 
 #### ABTestResult (DTO)
 ```java
@@ -123,7 +123,7 @@ public record ABTestResult(
     long treatmentCount,    // Total TREATMENT group scans
     long totalScans         // controlCount + treatmentCount
 ) {}
-```
+```bash
 
 ---
 
@@ -187,7 +187,7 @@ public interface SurveyService {
      */
     SurveyAnalytics getAnalytics();
 }
-```
+```java
 
 ### Data Contracts
 
@@ -202,7 +202,7 @@ public class SurveyResponse {
 
     // Getters only (immutable after creation)
 }
-```
+```java
 
 #### SurveyAnalytics (DTO)
 ```java
@@ -213,7 +213,7 @@ public record SurveyAnalytics(
     String hypothesis,            // "H3 validated" or "H3 not validated"
     String statisticalSignificance  // e.g., "p < 0.05"
 ) {}
-```
+```java
 
 #### GroupStats (DTO)
 ```java
@@ -223,7 +223,7 @@ public record GroupStats(
     long noCount,         // "No" responses
     double yesRate        // yesCount / totalResponses
 ) {}
-```
+```bash
 
 ---
 
@@ -273,7 +273,7 @@ public interface MenuService {
         Currency targetCurrency
     );
 }
-```
+```java
 
 ### Data Contracts
 
@@ -286,7 +286,7 @@ public class MenuItem {
 
     // Getters only
 }
-```
+```java
 
 #### FoodInfo (domain)
 ```java
@@ -298,7 +298,7 @@ public class FoodInfo {
 
     // Getters only
 }
-```
+```bash
 
 ---
 
@@ -318,7 +318,7 @@ public class FoodInfo {
   "treatmentCount": 148,
   "totalScans": 298
 }
-```
+```bash
 
 **Status Codes**:
 - 200: Success
@@ -339,7 +339,7 @@ public class FoodInfo {
   "scanId": "uuid",
   "hasConfidence": true
 }
-```
+```text
 
 **Response**:
 ```json
@@ -347,7 +347,7 @@ public class FoodInfo {
   "success": true,
   "message": "Response recorded"
 }
-```
+```bash
 
 **Status Codes**:
 - 200: Success
@@ -375,7 +375,7 @@ public class FoodInfo {
   "hypothesis": "H3 validated (ratio >= 2.0)",
   "statisticalSignificance": "p < 0.05"
 }
-```
+```bash
 
 **Status Codes**:
 - 200: Success
@@ -399,7 +399,7 @@ public class FoodInfo {
   "sourceCurrency": "USD",
   "targetCurrency": "KRW"
 }
-```
+```text
 
 **Response (CONTROL group)**:
 ```json
@@ -421,7 +421,7 @@ public class FoodInfo {
   ],
   "processingTime": 4.2
 }
-```
+```text
 
 **Response (TREATMENT group)**:
 ```json
@@ -443,7 +443,7 @@ public class FoodInfo {
   ],
   "processingTime": 4.2
 }
-```
+```bash
 
 **Status Codes**:
 - 200: Success
@@ -502,7 +502,7 @@ class ABTestControllerTest {
             .andExpect(jsonPath("$.controlCount").value(50));
     }
 }
-```
+```java
 
 ### Agent 4 (Integration)
 Use @MockBean for external APIs only, use real services:
@@ -525,7 +525,7 @@ class MenuScanIntegrationTest {
         // Test with real services, mocked external APIs
     }
 }
-```
+```bash
 
 ---
 

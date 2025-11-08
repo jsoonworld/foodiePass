@@ -30,7 +30,7 @@
 ```http
 Content-Type: application/json
 Cookie: JSESSIONID=<session-id>
-```
+```text
 
 **Request Body**:
 ```json
@@ -41,7 +41,7 @@ Cookie: JSESSIONID=<session-id>
   "originCurrencyName": "USD Dollar",  // Optional, auto-detect 가능
   "userCurrencyName": "KRW Won"        // Required
 }
-```
+```text
 
 **Request Parameters**:
 
@@ -98,7 +98,7 @@ Cookie: JSESSIONID=<session-id>
   ],
   "processingTime": 4.2
 }
-```
+```text
 
 **Response (Control 그룹)**:
 ```json
@@ -136,7 +136,7 @@ Cookie: JSESSIONID=<session-id>
   ],
   "processingTime": 3.1
 }
-```
+```text
 
 **Response Fields**:
 
@@ -171,7 +171,7 @@ Cookie: JSESSIONID=<session-id>
   "message": "Invalid image format. Only JPG, PNG, HEIC are allowed.",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```text
 
 **413 Payload Too Large** (이미지 크기 초과):
 ```json
@@ -180,7 +180,7 @@ Cookie: JSESSIONID=<session-id>
   "message": "Image size exceeds 10MB limit.",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```text
 
 **500 Internal Server Error** (서버 오류):
 ```json
@@ -189,7 +189,7 @@ Cookie: JSESSIONID=<session-id>
   "message": "OCR processing failed. Please try again.",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```text
 
 ---
 
@@ -218,7 +218,7 @@ Cookie: JSESSIONID=<session-id>
 **Request Headers**:
 ```http
 Content-Type: application/json
-```
+```text
 
 **Request Body**:
 ```json
@@ -226,7 +226,7 @@ Content-Type: application/json
   "scanId": "550e8400-e29b-41d4-a716-446655440000",
   "hasConfidence": true
 }
-```
+```text
 
 **Request Parameters**:
 
@@ -243,7 +243,7 @@ Content-Type: application/json
   "success": true,
   "message": "Survey response recorded successfully."
 }
-```
+```text
 
 **Response Fields**:
 
@@ -263,7 +263,7 @@ Content-Type: application/json
   "message": "Menu scan not found with id: 550e8400-e29b-41d4-a716-446655440000",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```text
 
 **400 Bad Request** (중복 응답):
 ```json
@@ -272,7 +272,7 @@ Content-Type: application/json
   "message": "Survey response already submitted for this scan.",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```bash
 
 ---
 
@@ -289,7 +289,7 @@ Content-Type: application/json
 **Request Headers**:
 ```http
 Authorization: Bearer <admin-token>
-```
+```text
 
 **Query Parameters**:
 
@@ -325,7 +325,7 @@ Authorization: Bearer <admin-token>
     "generatedAt": "2025-11-10T12:00:00Z"
   }
 }
-```
+```text
 
 **Response Fields**:
 
@@ -356,7 +356,7 @@ Authorization: Bearer <admin-token>
   "message": "Invalid or missing admin token.",
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```bash
 
 ---
 
@@ -390,7 +390,7 @@ Authorization: Bearer <admin-token>
   "retryAfter": 60,
   "timestamp": "2025-11-03T12:34:56Z"
 }
-```
+```bash
 
 ---
 
@@ -460,7 +460,7 @@ console.log('A/B Group:', result.abGroup);
 console.log('Items:', result.items);
 
 await submitSurvey(result.scanId, true);
-```
+```java
 
 ---
 
@@ -518,7 +518,7 @@ export async function scanMenu(request: MenuScanRequest): Promise<MenuScanRespon
 export async function submitSurvey(scanId: string, hasConfidence: boolean): Promise<void> {
   await api.post('/api/surveys', { scanId, hasConfidence });
 }
-```
+```bash
 
 ---
 

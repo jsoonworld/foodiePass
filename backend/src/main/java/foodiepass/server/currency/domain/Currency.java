@@ -20,6 +20,7 @@ import static foodiepass.server.currency.exception.CurrencyErrorCode.UNSUPPORTED
 
 @Getter
 public enum Currency {
+    AUTO("auto", "AUTO"),  // Automatic currency detection (OCR-based)
     AFGHAN_AFGHANI("Afghan Afghani", "AFN"),
     ALBANIAN_LEK("Albanian Lek", "ALL"),
     ALGERIAN_DINAR("Algerian Dinar", "DZD"),

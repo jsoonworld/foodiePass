@@ -28,15 +28,12 @@ public class MenuService {
 
         final List<MenuItem> menuItems = ocrReader.read(request.base64EncodedImage());
 
-        return Flux.fromIterable(menuItems)
-                .flatMap(menuItem -> menuItemEnricher.enrichAsync(
-                        menuItem,
-                        originLanguage,
-                        userLanguage,
-                        originCurrency,
-                        userCurrency
-                ))
-                .collectList()
-                .map(ReconfigureResponse::new);
+        return menuItemEnricher.enrichBatchAsync(
+                menuItems,
+                originLanguage,
+                userLanguage,
+                originCurrency,
+                userCurrency
+        ).map(ReconfigureResponse::new);
     }
 }

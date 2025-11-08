@@ -19,7 +19,7 @@
 
 ## High-Level Architecture
 
-```
+```text
 ┌─────────────┐
 │   Frontend  │ (React/Next.js)
 └──────┬──────┘
@@ -67,7 +67,7 @@
 │  - TasteAtlas (Food Images)          │
 │  - Currency API (Exchange Rates)     │
 └──────────────────────────────────────┘
-```
+```bash
 
 ---
 
@@ -93,7 +93,7 @@ public class MenuItem {
         this.foodInfo = foodInfo;
     }
 }
-```
+```bash
 
 **참고**:
 - MenuItem은 **불변(immutable) Value Object**입니다.
@@ -159,7 +159,7 @@ public class MenuScan {
         this.menuItemsJson = objectMapper.writeValueAsString(items);
     }
 }
-```
+```java
 
 **참고**:
 - MenuItem은 별도 테이블이 아닌 JSON으로 저장됩니다.
@@ -172,7 +172,7 @@ public enum ABGroup {
     CONTROL,    // 텍스트 + 환율만
     TREATMENT   // 사진 + 설명 + 텍스트 + 환율
 }
-```
+```java
 
 #### SurveyResponse
 ```java
@@ -189,13 +189,13 @@ public class SurveyResponse {
 
     private LocalDateTime createdAt;
 }
-```
+```bash
 
 ---
 
 ## 패키지 구조
 
-```
+```text
 src/main/java/foodiepass/server/
 ├── menu/                            # 메뉴 도메인
 │   ├── domain/
@@ -256,7 +256,7 @@ src/main/java/foodiepass/server/
     │       └── SurveyAnalytics.java
     └── repository/
         └── SurveyResponseRepository.java
-```
+```bash
 
 ---
 
@@ -272,7 +272,7 @@ src/main/java/foodiepass/server/
 public ReconfigureResponse reconfigure(ReconfigureRequest request) {
     // OCR → 번역 → 매칭 → 환율 파이프라인
 }
-```
+```java
 
 **새 메서드** (추가):
 ```java
@@ -294,7 +294,7 @@ public MenuScanResponse scanMenu(MenuScanRequest request, String sessionId) {
     // 5. 응답 반환 (abGroup 포함)
     return new MenuScanResponse(scan, group, items);
 }
-```
+```java
 
 ---
 
@@ -309,7 +309,7 @@ public class CurrencyService {
         // Redis 캐싱 적용 (24시간)
     }
 }
-```
+```java
 
 ---
 
@@ -323,7 +323,7 @@ public class LanguageService {
         // 기존 로직 재사용
     }
 }
-```
+```bash
 
 ---
 
@@ -372,7 +372,7 @@ public class ABTestService {
         // Control vs Treatment 그룹 응답률 계산
     }
 }
-```
+```java
 
 ---
 
@@ -425,7 +425,7 @@ public class SurveyService {
         );
     }
 }
-```
+```bash
 
 ---
 
@@ -491,7 +491,7 @@ public class SurveyService {
 public class SessionConfig {
     // Redis를 세션 저장소로 사용
 }
-```
+```java
 
 ---
 
@@ -503,7 +503,7 @@ public class SessionConfig {
 public CompletableFuture<FoodInfo> enrichFoodInfo(String foodName) {
     // 음식 매칭을 비동기로 처리 (Treatment 그룹만)
 }
-```
+```java
 
 ### 2. 병렬 API 호출
 ```java
@@ -513,7 +513,7 @@ Mono<List<MenuItem>> items = Mono.zip(
     languageService.translate(...),
     currencyService.convert(...)
 ).map(tuple -> combine(tuple.getT1(), tuple.getT2(), tuple.getT3()));
-```
+```bash
 
 ### 3. 캐싱
 - 환율: Redis 24시간 캐싱
@@ -563,7 +563,7 @@ public class MenuService {
             scanId, duration, abGroup);
     }
 }
-```
+```bash
 
 ---
 
