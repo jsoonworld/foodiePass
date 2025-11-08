@@ -17,6 +17,7 @@ import static foodiepass.server.language.exception.LanguageErrorCode.LANGUAGE_NO
 
 public enum Language {
 
+    AUTO("auto", "auto"),  // Automatic language detection (Gemini API supported)
     AFRIKAANS("Afrikaans", "af"),
     ALBANIAN("Albanian", "sq"),
     AMHARIC("Amharic", "am"),

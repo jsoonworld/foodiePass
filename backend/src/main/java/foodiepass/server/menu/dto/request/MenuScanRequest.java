@@ -41,7 +41,7 @@ public record MenuScanRequest(
         this.base64EncodedImage = base64EncodedImage;
         this.originLanguageName = (originLanguageName == null || originLanguageName.isBlank()) ? "auto" : originLanguageName;
         this.userLanguageName = userLanguageName;
-        this.originCurrencyName = originCurrencyName;
+        this.originCurrencyName = (originCurrencyName == null || originCurrencyName.isBlank()) ? "auto" : originCurrencyName;
         this.userCurrencyName = userCurrencyName;
     }
 }
