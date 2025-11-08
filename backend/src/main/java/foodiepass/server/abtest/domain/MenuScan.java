@@ -41,10 +41,10 @@ public class MenuScan {
     @Column(length = 50)
     private String targetLanguage;
 
-    @Column(length = 10)
+    @Column(length = 100)
     private String sourceCurrency;
 
-    @Column(length = 10)
+    @Column(length = 100)
     private String targetCurrency;
 
     @Column(nullable = false)
