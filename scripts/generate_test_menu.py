@@ -19,11 +19,11 @@ def create_test_menu():
         # Try system fonts that support Japanese
         font_large = ImageFont.truetype('/System/Library/Fonts/ヒラギノ角ゴシック W4.ttc', 60)
         font_medium = ImageFont.truetype('/System/Library/Fonts/ヒラギノ角ゴシック W4.ttc', 40)
-    except:
+    except (OSError, IOError):
         try:
             font_large = ImageFont.truetype('/System/Library/Fonts/Hiragino Sans GB.ttc', 60)
             font_medium = ImageFont.truetype('/System/Library/Fonts/Hiragino Sans GB.ttc', 40)
-        except:
+        except (OSError, IOError):
             # Fallback to default font
             font_large = ImageFont.load_default()
             font_medium = ImageFont.load_default()
@@ -46,6 +46,7 @@ def create_test_menu():
         os.path.dirname(__file__),
         '../backend/src/test/resources/images/test-menu.jpg'
     )
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     image.save(output_path, 'JPEG', quality=95)
     print(f"✅ Test menu image created: {output_path}")
 

@@ -18,6 +18,8 @@ import java.util.Base64;
 @DisplayName("GeminiClient 디버그 테스트 - 실제 응답 확인")
 class GeminiClientDebugTest {
 
+    private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";
+
     @Autowired
     private GeminiClient geminiClient;
 
@@ -25,7 +27,7 @@ class GeminiClientDebugTest {
     @DisplayName("Gemini API 응답 원문을 확인한다")
     void checkRawGeminiResponse() throws IOException {
         // given: 테스트용 일본어 메뉴판 이미지
-        final Path imagePath = Paths.get("src/test/resources/images/test-menu.jpg");
+        final Path imagePath = Paths.get(TEST_IMAGE_PATH);
         final byte[] imageBytes = Files.readAllBytes(imagePath);
         final String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
         final ByteString byteStringImage = ByteString.copyFrom(Base64.getDecoder().decode(base64EncodedImage));

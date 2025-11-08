@@ -59,7 +59,7 @@ public class GeminiOcrReader implements OcrReader {
                     .collect(Collectors.toList());
 
         } catch (final JsonProcessingException e) {
-            log.error("Failed to parse Gemini OCR response", e);
+            log.error("Failed to parse Gemini OCR response. Response: {}", jsonResponse, e);
             throw new GeminiException(GeminiErrorCode.OCR_REQUEST_FAILED);
         }
     }
