@@ -17,6 +17,7 @@ import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @ActiveProfiles("integration-test")
@@ -33,6 +34,11 @@ class GeminiOcrReaderIntegrationTest {
 
     @BeforeEach
     void setUp() throws IOException {
+        assumeTrue(
+            System.getenv("GEMINI_API_KEY") != null && !System.getenv("GEMINI_API_KEY").isBlank(),
+            "GEMINI_API_KEY 환경 변수가 설정된 경우에만 통합 테스트를 실행합니다."
+        );
+
         final Path imagePath = Paths.get(TEST_IMAGE_PATH);
         imageBytes = Files.readAllBytes(imagePath);
         base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
@@ -114,8 +120,12 @@ class GeminiOcrReaderIntegrationTest {
         );
 
         boolean containsExpectedItem = extractedNames.stream()
-            .anyMatch(name -> expectedKeywords.stream()
-                .anyMatch(keyword -> name.toLowerCase().contains(keyword.toLowerCase())));
+            .anyMatch(name -> {
+                String lowerName = name.toLowerCase();
+                return expectedKeywords.stream()
+                    .anyMatch(keyword ->
+                        name.contains(keyword) || lowerName.contains(keyword.toLowerCase()));
+            });
 
         assertThat(containsExpectedItem)
             .as("최소 하나의 예상 메뉴 항목이 추출되어야 함")

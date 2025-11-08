@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """
 Generate a test menu image with Japanese text for OCR testing.
+
+Requirements:
+    pip install Pillow
+
+Usage:
+    python scripts/generate_test_menu.py
 """
 
 from PIL import Image, ImageDraw, ImageFont
