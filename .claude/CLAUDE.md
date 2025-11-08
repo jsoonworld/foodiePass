@@ -16,7 +16,7 @@
 
 ## Repository Structure
 
-```
+```text
 foodiePass/
 ├── backend/          # Spring Boot 3.5.3, Java 21
 │   ├── docs/        # 백엔드 전용 문서

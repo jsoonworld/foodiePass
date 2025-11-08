@@ -12,7 +12,7 @@ Integrate A/B testing into MenuController and create comprehensive integration t
 ## Files to Modify
 
 ### 1. MenuController.java
-```
+```text
 src/main/java/foodiepass/server/menu/api/MenuController.java
 ```
 
@@ -25,7 +25,7 @@ src/main/java/foodiepass/server/menu/api/MenuController.java
 ## Files to Create
 
 ### 1. DTO Layer
-```
+```text
 src/main/java/foodiepass/server/menu/api/dto/
 ├── request/
 │   └── MenuScanRequest.java
@@ -35,7 +35,7 @@ src/main/java/foodiepass/server/menu/api/dto/
 ```
 
 ### 2. Integration Tests
-```
+```text
 src/test/java/foodiepass/server/menu/
 ├── integration/
 │   ├── MenuScanIntegrationTest.java
@@ -46,7 +46,7 @@ src/test/java/foodiepass/server/menu/
 ```
 
 ### 3. E2E Tests
-```
+```text
 src/test/java/foodiepass/server/e2e/
 └── MenuScanE2ETest.java
 ```

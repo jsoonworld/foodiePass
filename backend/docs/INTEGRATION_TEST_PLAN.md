@@ -44,7 +44,7 @@
 ```bash
 # 프로젝트 ID가 올바르게 생성되었는지 확인
 echo "프로젝트 ID: [복사한 프로젝트 ID]"
-```
+```bash
 
 ✅ **완료 조건**: 프로젝트 ID 확보
 
@@ -63,7 +63,7 @@ echo "프로젝트 ID: [복사한 프로젝트 ID]"
 ```bash
 # 웹 콘솔에서 확인:
 # "API 및 서비스" → "대시보드" → 활성화된 API 목록 확인
-```
+```bash
 
 ✅ **완료 조건**: 두 API 모두 활성화 상태
 
@@ -110,7 +110,7 @@ gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
 # 키 생성 및 다운로드
 gcloud iam service-accounts keys create ~/foodiepass-credentials.json \
   --iam-account=foodiepass-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
-```
+```bash
 
 #### 검증
 ```bash
@@ -119,7 +119,7 @@ ls -l ~/foodiepass-credentials.json
 
 # 키 파일 내용 확인 (JSON 형식)
 cat ~/foodiepass-credentials.json | head -n 5
-```
+```bash
 
 ✅ **완료 조건**: credentials.json 파일 존재 및 유효성 확인
 
@@ -171,7 +171,7 @@ EOF
 # 실제 값으로 교체 (YOUR_USERNAME, your-project-id-here)
 # 예: sed -i '' 's|YOUR_USERNAME|harperkwon|g' .env
 # 예: sed -i '' 's|your-project-id-here|foodiepass-mvp-123456|g' .env
-```
+```bash
 
 #### 환경 변수 로드 (터미널에서)
 
@@ -182,7 +182,7 @@ export $(cat .env | xargs)
 # 또는 각 터미널 세션마다 자동 로드 (선택)
 echo "export \$(cat $(pwd)/.env | xargs)" >> ~/.zshrc  # zsh 사용 시
 echo "export \$(cat $(pwd)/.env | xargs)" >> ~/.bashrc # bash 사용 시
-```
+```bash
 
 #### 검증
 
@@ -197,7 +197,7 @@ ls -l $GOOGLE_CREDENTIALS_PATH
 
 # Spring Boot가 환경 변수를 읽을 수 있는지 확인
 ./gradlew bootRun --args='--spring.profiles.active=dev' --dry-run
-```
+```bash
 
 ✅ **완료 조건**:
 - 모든 환경 변수가 설정됨
@@ -240,7 +240,7 @@ mkdir -p src/test/resources
 # 테스트용 메뉴판 이미지 다운로드 (예시)
 # 실제 일본/한국/중국 메뉴판 사진을 test-menu.jpg로 저장
 # 또는 직접 촬영한 메뉴판 사진 사용
-```
+```java
 
 #### 테스트 코드 작성
 
@@ -301,7 +301,7 @@ class GeminiOcrIntegrationTest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
@@ -314,7 +314,7 @@ export $(cat .env | xargs)
 
 # 또는 더 자세한 로그와 함께
 ./gradlew test --tests GeminiOcrIntegrationTest --info
-```
+```bash
 
 #### 검증
 
@@ -403,13 +403,13 @@ class GoogleTranslationIntegrationTest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
 ```bash
 ./gradlew test --tests GoogleTranslationIntegrationTest
-```
+```bash
 
 #### 검증
 
@@ -499,13 +499,13 @@ class TasteAtlasFoodScrapperIntegrationTest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
 ```bash
 ./gradlew test --tests TasteAtlasFoodScrapperIntegrationTest
-```
+```bash
 
 #### 검증
 
@@ -587,13 +587,13 @@ class GoogleFinanceRateProviderIntegrationTest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
 ```bash
 ./gradlew test --tests GoogleFinanceRateProviderIntegrationTest
-```
+```bash
 
 #### 검증
 
@@ -616,7 +616,7 @@ EOF
 ./gradlew test --tests "foodiepass.server.menu.infra.*IntegrationTest"
 ./gradlew test --tests "foodiepass.server.language.infra.*IntegrationTest"
 ./gradlew test --tests "foodiepass.server.currency.infra.*IntegrationTest"
-```
+```bash
 
 ### Phase 2 체크리스트
 
@@ -709,13 +709,13 @@ class OcrTranslationIntegrationTest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
 ```bash
 ./gradlew test --tests OcrTranslationIntegrationTest
-```
+```bash
 
 ### Phase 3 체크리스트
 
@@ -882,13 +882,13 @@ class FullPipelineE2ETest {
     }
 }
 EOF
-```
+```bash
 
 #### 테스트 실행
 
 ```bash
 ./gradlew test --tests FullPipelineE2ETest
-```
+```bash
 
 #### 검증
 
@@ -931,7 +931,7 @@ export $(cat .env | xargs)
 # 서버 정상 시작 확인
 # - "Started ServerApplication in X seconds" 메시지 확인
 # - 포트 8080 리스닝 확인
-```
+```bash
 
 #### 서버 상태 확인
 
@@ -941,7 +941,7 @@ curl http://localhost:8080/actuator/health
 
 # 예상 응답:
 # {"status":"UP"}
-```
+```bash
 
 ---
 
@@ -962,7 +962,7 @@ Content-Type: application/json
   "originCurrencyName": "JPY",
   "userCurrencyName": "KRW"
 }
-```
+```bash
 
 ##### base64 이미지 생성 (Mac/Linux)
 
@@ -972,7 +972,7 @@ base64 -i test-menu.jpg -o test-menu-base64.txt
 
 # 또는 한 줄로
 base64 -i test-menu.jpg | tr -d '\n' | pbcopy  # Mac: 클립보드에 복사
-```
+```bash
 
 ##### 예상 응답 (Treatment 그룹)
 
@@ -1000,7 +1000,7 @@ base64 -i test-menu.jpg | tr -d '\n' | pbcopy  # Mac: 클립보드에 복사
   ],
   "processingTime": 3.8
 }
-```
+```bash
 
 ##### 예상 응답 (Control 그룹)
 
@@ -1028,7 +1028,7 @@ base64 -i test-menu.jpg | tr -d '\n' | pbcopy  # Mac: 클립보드에 복사
   ],
   "processingTime": 2.1
 }
-```
+```bash
 
 ---
 
@@ -1044,7 +1044,7 @@ Content-Type: application/json
   "scanId": "123e4567-e89b-12d3-a456-426614174000",
   "hasConfidence": true
 }
-```
+```bash
 
 ##### 예상 응답
 
@@ -1055,7 +1055,7 @@ Content-Type: application/json
   "hasConfidence": true,
   "submittedAt": "2025-01-15T10:30:00Z"
 }
-```
+```bash
 
 ---
 
@@ -1079,7 +1079,7 @@ curl -X POST http://localhost:8080/api/menus/scan \
   }" | jq .
 
 # jq: JSON 포맷팅 도구 (brew install jq)
-```
+```bash
 
 #### 설문 제출
 
@@ -1090,7 +1090,7 @@ curl -X POST http://localhost:8080/api/surveys \
     "scanId": "123e4567-e89b-12d3-a456-426614174000",
     "hasConfidence": true
   }' | jq .
-```
+```bash
 
 ---
 
@@ -1147,7 +1147,7 @@ curl -X POST http://localhost:8080/api/surveys \
 ```bash
 # RDS 엔드포인트 복사 (예시):
 # foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com
-```
+```bash
 
 #### 로컬에서 연결 테스트
 
@@ -1160,7 +1160,7 @@ mysql -h foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com \
       -u admin -p
 
 # 비밀번호 입력 후 연결 확인
-```
+```sql
 
 #### 데이터베이스 생성
 
@@ -1169,7 +1169,7 @@ mysql -h foodiepass-mvp-db.abcd1234.us-east-1.rds.amazonaws.com \
 CREATE DATABASE foodiepass_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 SHOW DATABASES;
 USE foodiepass_db;
-```
+```bash
 
 ---
 
@@ -1203,7 +1203,7 @@ USE foodiepass_db;
 ```bash
 # Redis 엔드포인트 복사 (예시):
 # foodiepass-redis.abcd12.0001.use1.cache.amazonaws.com:6379
-```
+```bash
 
 ---
 
@@ -1264,7 +1264,7 @@ EOF
 # - your-project-id
 # - your-rds-password
 # - RDS/Redis 엔드포인트
-```
+```bash
 
 ---
 
@@ -1340,7 +1340,7 @@ java -version
 
 # Git 설치
 sudo apt install git -y
-```
+```bash
 
 #### 애플리케이션 배포
 
@@ -1355,7 +1355,7 @@ nano .env.prod
 
 # Google Cloud credentials.json 업로드
 # (로컬에서 scp로 업로드)
-```
+```bash
 
 #### 로컬에서 credentials.json 업로드
 
@@ -1364,7 +1364,7 @@ nano .env.prod
 scp -i "your-key.pem" \
     ~/foodiepass-credentials.json \
     ubuntu@ec2-xx-xx-xx-xx.compute-1.amazonaws.com:/home/ubuntu/foodiepass-credentials.json
-```
+```bash
 
 #### EC2에서 애플리케이션 빌드 및 실행
 
@@ -1384,14 +1384,14 @@ nohup ./gradlew bootRun --args='--spring.profiles.active=prod' > app.log 2>&1 &
 
 # 로그 확인
 tail -f app.log
-```
+```bash
 
 #### 서버 상태 확인
 
 ```bash
 # 다른 터미널에서
 curl http://ec2-xx-xx-xx-xx.compute-1.amazonaws.com:8080/actuator/health
-```
+```bash
 
 ---
 
@@ -1412,7 +1412,7 @@ Content-Type: application/json
   "originCurrencyName": "JPY",
   "userCurrencyName": "KRW"
 }
-```
+```bash
 
 ##### 설문 제출
 
@@ -1424,7 +1424,7 @@ Content-Type: application/json
   "scanId": "...",
   "hasConfidence": true
 }
-```
+```bash
 
 ---
 
@@ -1438,14 +1438,14 @@ sudo apt install awscli -y
 
 # CloudWatch Logs Agent 설치
 # (AWS 공식 문서 참고)
-```
+```bash
 
 #### 애플리케이션 로그 확인
 
 ```bash
 # EC2에서
 tail -f ~/foodiePass/backend/app.log
-```
+```bash
 
 ---
 

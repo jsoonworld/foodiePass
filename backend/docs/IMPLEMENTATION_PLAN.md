@@ -6,7 +6,7 @@
 
 ## 📋 전체 구현 단계
 
-```
+```text
 Phase 1: ABTest 모듈 구현
   ├─ Step 1: ABGroup enum 구현
   ├─ Step 2: MenuScan entity 구현
@@ -27,7 +27,7 @@ Phase 3: MenuScan API 구현
 
 Phase 4: 기술 검증 (H2)
   └─ Step 13: 내부 기술 검증 테스트
-```
+```bash
 
 ---
 
@@ -35,12 +35,12 @@ Phase 4: 기술 검증 (H2)
 
 각 단계는 다음 TDD 사이클을 따릅니다:
 
-```
+```text
 🔴 RED   → 실패하는 테스트 작성
 🟢 GREEN → 최소한의 코드로 테스트 통과
 🔵 REFACTOR → 코드 개선 및 리팩토링
 ✅ VERIFY → 모든 테스트 재실행 및 검증
-```
+```bash
 
 ### TDD 준수 원칙
 
@@ -112,7 +112,7 @@ class ABGroupTest {
         assertEquals(2, values.length);
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABGroupTest` 실행
@@ -142,7 +142,7 @@ public enum ABGroup {
     CONTROL,    // 텍스트 + 환율만
     TREATMENT   // 사진 + 설명 + 텍스트 + 환율
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABGroupTest` 실행
@@ -182,7 +182,7 @@ public enum ABGroup {
      */
     TREATMENT
 }
-```
+```bash
 
 #### 테스트 재실행
 - [ ] `./gradlew test --tests ABGroupTest` 실행
@@ -371,7 +371,7 @@ class MenuScanTest {
         });
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests MenuScanTest` 실행
@@ -480,7 +480,7 @@ public class MenuScan {
         }
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests MenuScanTest` 실행
@@ -593,7 +593,7 @@ public class MenuScan {
         }
     }
 }
-```
+```java
 
 #### Factory method 테스트 추가
 ```java
@@ -616,7 +616,7 @@ void createMenuScanUsingFactoryMethod() {
     assertEquals(abGroup, menuScan.getAbGroup());
     assertNotNull(menuScan.getCreatedAt());
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests MenuScanTest` 실행
@@ -745,7 +745,7 @@ class MenuScanRepositoryTest {
         assertEquals(1, treatmentCount);
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests MenuScanRepositoryTest` 실행
@@ -779,7 +779,7 @@ public interface MenuScanRepository extends JpaRepository<MenuScan, UUID> {
      */
     long countByAbGroup(ABGroup abGroup);
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests MenuScanRepositoryTest` 실행
@@ -940,7 +940,7 @@ class ABTestServiceTest {
         assertEquals(3, result.totalScans());
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABTestServiceTest` 실행
@@ -963,7 +963,7 @@ public record ABTestResult(
         this(controlCount, treatmentCount, controlCount + treatmentCount);
     }
 }
-```
+```java
 
 #### Service 파일 생성
 - [ ] `backend/src/main/java/foodiepass/server/abtest/application/ABTestService.java` 생성
@@ -1039,7 +1039,7 @@ public class ABTestService {
         return new ABTestResult(controlCount, treatmentCount);
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABTestServiceTest` 실행
@@ -1130,7 +1130,7 @@ public class ABTestService {
             : ABGroup.TREATMENT;
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABTestServiceTest` 실행
@@ -1207,7 +1207,7 @@ class ABTestControllerTest {
             .andExpect(jsonPath("$.totalScans").value(100));
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABTestControllerTest` 실행
@@ -1246,7 +1246,7 @@ public class ABTestController {
         return ResponseEntity.ok(result);
     }
 }
-```
+```bash
 
 #### 테스트 실행
 - [ ] `./gradlew test --tests ABTestControllerTest` 실행
@@ -1324,7 +1324,7 @@ public class ABTestController {
 - [ ] SOLID 원칙을 따르는가?
 
 #### 개선점 기록
-```
+```text
 Phase 1에서 배운 점:
 -
 -
@@ -1334,7 +1334,7 @@ Phase 2에서 개선할 점:
 -
 -
 -
-```
+```bash
 
 ---
 
@@ -1728,7 +1728,7 @@ open build/reports/jacoco/test/html/index.html
 
 # 통합 테스트만 실행
 ./gradlew test --tests "*IntegrationTest"
-```
+```bash
 
 ---
 
