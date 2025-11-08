@@ -40,6 +40,8 @@ public class MenuScanController {
         // Use session ID as userId for A/B test assignment
         String userId = session.getId();
         log.info("Received menu scan request from user: {}", userId);
+        log.debug("Request details - userLanguageName: {}, userCurrencyName: {}",
+                request.userLanguageName(), request.userCurrencyName());
 
         return menuScanService.scanMenu(request, userId)
             .map(ResponseEntity::ok)
