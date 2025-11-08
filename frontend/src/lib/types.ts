@@ -50,11 +50,17 @@ export interface LanguageResponse {
 
 export interface CurrencyResponse {
   currencyName: string;
-  currencyCode: string;
+  currencyCode?: string;
 }
 
 export interface ApiError {
   error: string;
   message: string;
   timestamp: string;
+}
+
+export interface GlobalResponse<T> {
+  status: number;
+  message: string;
+  result: T;
 }

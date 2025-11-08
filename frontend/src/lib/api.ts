@@ -6,6 +6,7 @@ import type {
   SurveyResponse,
   LanguageResponse,
   CurrencyResponse,
+  GlobalResponse,
 } from './types';
 
 export const api = axios.create({
@@ -101,11 +102,11 @@ export async function submitSurvey(request: SurveyRequest): Promise<SurveyRespon
 }
 
 export async function getLanguages(): Promise<LanguageResponse[]> {
-  const response = await api.get<LanguageResponse[]>('/api/language');
-  return response.data;
+  const response = await api.get<GlobalResponse<LanguageResponse[]>>('/api/language');
+  return response.data.result;
 }
 
 export async function getCurrencies(): Promise<CurrencyResponse[]> {
-  const response = await api.get<CurrencyResponse[]>('/api/currency');
-  return response.data;
+  const response = await api.get<GlobalResponse<CurrencyResponse[]>>('/api/currency');
+  return response.data.result;
 }
