@@ -24,7 +24,6 @@ import static com.google.cloud.translate.Translate.TranslateOption.model;
 import static com.google.cloud.translate.Translate.TranslateOption.sourceLanguage;
 import static com.google.cloud.translate.Translate.TranslateOption.targetLanguage;
 
-@Component
 @Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 public class GoogleTranslationClient implements TranslationClient {
 

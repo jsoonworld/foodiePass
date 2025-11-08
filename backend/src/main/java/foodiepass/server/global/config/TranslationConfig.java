@@ -1,9 +1,8 @@
 package foodiepass.server.global.config;
 
-import com.google.cloud.translate.Translate;
-import foodiepass.server.language.infra.GoogleTranslationClient;
+import foodiepass.server.language.infra.GeminiTranslationClient;
 import foodiepass.server.menu.application.port.out.TranslationClient;
-import org.springframework.beans.factory.annotation.Value;
+import foodiepass.server.menu.infra.scraper.gemini.GeminiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -15,10 +14,7 @@ public class TranslationConfig {
 
     @Bean
     @Primary
-    public TranslationClient translationClient(
-            final Translate translate,
-            @Value("${google.translation.model}") final String translationModel
-    ) {
-        return new GoogleTranslationClient(translate, translationModel);
+    public TranslationClient translationClient(final GeminiClient geminiClient) {
+        return new GeminiTranslationClient(geminiClient);
     }
 }
