@@ -147,7 +147,7 @@ class GeminiOcrReaderIntegrationTest {
                     .as("가격이 일본 메뉴판의 합리적 범위여야 함")
                     .isBetween(100.0, 10000.0);
 
-            assertThat(item.getPrice().getCurrency().getCode())
+            assertThat(item.getPrice().getCurrency().getCurrencyCode())
                     .as("통화는 JPY여야 함")
                     .isEqualTo("JPY");
         });

@@ -37,12 +37,13 @@ public class GeminiOcrReader implements OcrReader {
 
     @Override
     public List<MenuItem> read(final String base64encodedImage) {
+        String jsonResponse = null;
         try {
             final ByteString byteStringImage = ByteString.copyFrom(
                     Base64.getDecoder().decode(base64encodedImage)
             );
 
-            final String jsonResponse = geminiClient.generateText(
+            jsonResponse = geminiClient.generateText(
                     byteStringImage,
                     IMAGE_MIME_TYPE,
                     JSON_EXTRACT_PROMPT_MESSAGE
