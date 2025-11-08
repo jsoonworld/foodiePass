@@ -40,8 +40,9 @@ export default function CurrencySelector({ value, onChange, disabled }: Currency
         </SelectTrigger>
         <SelectContent className="max-h-[300px] bg-popover z-50">
           {currencies.map((currency) => (
-            <SelectItem key={currency.currencyCode} value={currency.currencyName}>
-              {currency.currencyName} ({currency.currencyCode})
+            <SelectItem key={currency.currencyName} value={currency.currencyName}>
+              {currency.currencyName}
+              {currency.currencyCode && ` (${currency.currencyCode})`}
             </SelectItem>
           ))}
         </SelectContent>
