@@ -26,6 +26,16 @@ logging:
     org.hibernate.SQL: debug
     foodiepass.server: debug
 
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
 # Spring MVC async request timeout (3 minutes)
 spring.mvc.async.request-timeout: 180000
 
