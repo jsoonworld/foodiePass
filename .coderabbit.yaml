@@ -39,28 +39,28 @@ reviews:
     "**/*.yaml": "medium"
     "**/*.md": "low"
 
+  # Path-based instructions
+  path_instructions:
+    - path: "backend/**"
+      instructions: |
+        - Java 21 및 Spring Boot 3.5.3 모범 사례를 따르세요
+        - 보안 취약점을 확인하세요
+        - 성능 최적화 기회를 찾으세요
+
+    - path: "frontend/**"
+      instructions: |
+        - React 및 TypeScript 모범 사례를 따르세요
+        - 접근성(a11y) 이슈를 확인하세요
+        - 성능 최적화 기회를 찾으세요
+
+    - path: "**/*.test.*"
+      instructions: |
+        - 테스트 커버리지를 확인하세요
+        - 엣지 케이스가 적절히 처리되는지 확인하세요
+
 # Chat settings
 chat:
   auto_reply: true
-
-# Path-based instructions
-path_instructions:
-  - path: "backend/**"
-    instructions: |
-      - Java 21 및 Spring Boot 3.5.3 모범 사례를 따르세요
-      - 보안 취약점을 확인하세요
-      - 성능 최적화 기회를 찾으세요
-
-  - path: "frontend/**"
-    instructions: |
-      - React 및 TypeScript 모범 사례를 따르세요
-      - 접근성(a11y) 이슈를 확인하세요
-      - 성능 최적화 기회를 찾으세요
-
-  - path: "**/*.test.*"
-    instructions: |
-      - 테스트 커버리지를 확인하세요
-      - 엣지 케이스가 적절히 처리되는지 확인하세요
 
 # Early access features
 early_access: false
