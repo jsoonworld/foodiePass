@@ -1,56 +1,72 @@
 # FoodiePass - 다음 세션 작업 목록
 
-**현재 상태**: feature/local-integration-test 브랜치 (커밋 완료)
-**최신 커밋**: `2fe6d53` - API 키 환경변수 처리 및 .env 설정 완료
+**현재 상태**: feature/docs-refinement 브랜치 (develop 기반)
+**현재 브랜치**: `feature/docs-refinement`
+**최신 커밋**: `84d1f54` - docs: add TODO, session summary, and .env.example from feature branch
 
 ---
 
-## ✅ 완료된 작업
+## ✅ 완료된 작업 (2025-11-09 세션)
 
-1. API 키 보안 처리
-   - application-local.yml에서 하드코딩된 API 키 제거
-   - `backend/.env.example` 템플릿 파일 생성
-   - `backend/.env` 파일에 실제 키값 설정 (gitignore됨)
+### 1. API 키 보안 처리
+   - ✅ application-local.yml에서 하드코딩된 API 키 제거
+   - ✅ `backend/.env.example` 템플릿 파일 생성
+   - ✅ `backend/.env` 파일에 실제 키값 설정 (gitignore됨)
 
-2. 코드 개선
-   - `name()` → `getLanguageName()` 메서드 사용 (API 명확성 개선)
-   - GeminiTranslationClient, GeminiOcrReader, TasteAtlasFoodScrapper 업데이트
+### 2. 코드 개선
+   - ✅ `name()` → `getLanguageName()` 메서드 사용 (API 명확성 개선)
+   - ✅ GeminiTranslationClient, GeminiOcrReader, TasteAtlasFoodScrapper 업데이트
+
+### 3. develop 브랜치 검증 완료
+   - ✅ feature/local-integration-test 브랜치 푸시 (commit: 57e030e)
+   - ✅ develop 브랜치로 전환 및 pull 완료
+   - ✅ 백그라운드 프로세스 정리 (40+ gradle/npm 프로세스 종료)
+   - ✅ 백엔드 서버 실행 성공 (Spring Boot 3.5.3, Java 21)
+   - ✅ 데이터베이스 테이블 생성 확인 (menu_scan, survey_response)
+   - ✅ A/B 테스트 API 동작 확인: `GET /api/admin/ab-test/results` ✅
+
+### 4. 문서화
+   - ✅ SESSION_SUMMARY_2025-11-09.md 생성
+   - ✅ TODO_NEXT_SESSION.md 생성
+   - ✅ backend/.env.example 추가
 
 ---
 
-## 🔴 긴급 (다음 세션 최우선)
+## 🔴 긴급 (최우선 처리)
 
-### 1. develop 브랜치로 이동 및 검증
+### 1. API 500 에러 디버깅 및 수정
+
+**발견된 문제**:
+- ❌ `GET /actuator/health` → 500 error
+- ❌ `GET /api/admin/surveys/results` → 500 error
+- ✅ `GET /api/admin/ab-test/results` → 정상 동작
+
+**디버깅 계획**:
 ```bash
-# 현재 feature 브랜치 푸시
-git push origin feature/local-integration-test
-
-# develop 브랜치로 이동
-git checkout develop
-git pull origin develop
-
-# 최신 상태 확인
-git log --oneline -10
-git status
-```
-
-### 2. 프로젝트 동작 검증
-```bash
-# 백엔드 실행 (새 터미널)
+# 1. 백엔드 로그 확인 (에러 스택트레이스 분석)
 cd backend
 export SPOONACULAR_API_KEY="1fe91ac5a2614fe985481f65a21ce6f6"
 ./gradlew bootRun --args='--spring.profiles.active=local' -Dorg.gradle.jvmargs='-Xmx4g -Xms1g'
 
-# 프론트엔드 실행 (다른 터미널)
-cd frontend
-npm install
-npm run dev
+# 2. 에러 발생 시 curl로 재현
+curl -v http://localhost:8080/actuator/health
+curl -v http://localhost:8080/api/admin/surveys/results
 
-# API 테스트
-curl http://localhost:8080/actuator/health
-curl http://localhost:8080/api/admin/ab-test/results
-curl http://localhost:8080/api/admin/surveys/results
+# 3. 로그에서 에러 원인 확인
+# - NullPointerException?
+# - Bean initialization failure?
+# - Database connection issue?
 ```
+
+**예상 원인**:
+- Actuator health endpoint 설정 문제 (dependencies 누락?)
+- SurveyResultsDto 생성 시 null 값 처리 이슈
+- Spring Boot Actuator 설정 누락
+
+**수정 방향**:
+1. `backend/src/main/resources/application-local.yml` actuator 설정 확인
+2. `SurveyResultsDto` null 안전성 검증
+3. 필요 시 health endpoint custom indicator 추가
 
 ---
 
@@ -268,20 +284,41 @@ tail -f /tmp/backend-*.log
 
 ---
 
-## ✅ 체크리스트 (다음 세션 시작 시)
+## ✅ 체크리스트 (2025-11-09 세션 완료 상태)
 
-- [ ] feature/local-integration-test 브랜치 푸시 완료
-- [ ] develop 브랜치로 이동
-- [ ] 백엔드 서버 정상 실행 확인
+- [x] feature/local-integration-test 브랜치 푸시 완료 (commit: 57e030e)
+- [x] develop 브랜치로 이동 완료
+- [x] 백엔드 서버 정상 실행 확인 ✅
+- [x] 데이터베이스 테이블 생성 확인 (menu_scan, survey_response)
+- [x] A/B 테스트 API 동작 확인 ✅
+- [x] 백그라운드 프로세스 정리 완료 (40+ 프로세스 종료)
+- [x] 새 feature 브랜치 생성 (feature/docs-refinement)
+- [x] 문서 업데이트 (TODO, SESSION_SUMMARY, .env.example)
+- [ ] **API 500 에러 수정** (❌ /actuator/health, ❌ /api/admin/surveys/results)
 - [ ] 프론트엔드 서버 정상 실행 확인
-- [ ] API 엔드포인트 동작 확인
-- [ ] A/B 테스트 동작 확인
-- [ ] 설문 시스템 동작 확인
-- [ ] 백그라운드 프로세스 정리
-- [ ] 문서 업데이트 (선택)
+- [ ] 프론트엔드 E2E 플로우 테스트
 
 ---
 
-**마지막 업데이트**: 2025-11-09 11:15
+## 📋 다음 세션 우선순위
+
+### Immediate (바로 시작)
+1. API 500 에러 디버깅 및 수정
+2. 프론트엔드 서버 실행 및 동작 확인
+3. Control/Treatment UI 분기 동작 테스트
+
+### Short-term (이번 주 내)
+4. E2E 테스트 작성 (Playwright)
+5. 메뉴 스캔 → 설문까지 전체 플로우 검증
+6. 성능 최적화 (처리 시간 5초 이내)
+
+### Medium-term (다음 주)
+7. AWS 인프라 설정 준비
+8. 환경변수 관리 전략 수립
+9. 스테이징 환경 배포 계획
+
+---
+
+**마지막 업데이트**: 2025-11-09 11:30
 **작성자**: Claude Code Assistant
-**다음 세션 예상 소요 시간**: 2-3시간
+**다음 세션 예상 소요 시간**: 2-3시간 (API 에러 수정 포함)
