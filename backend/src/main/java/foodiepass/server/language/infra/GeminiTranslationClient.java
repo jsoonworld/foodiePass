@@ -72,8 +72,8 @@ public class GeminiTranslationClient implements TranslationClient {
     }
 
     private String buildTranslationPrompt(Language source, Language target, String text) {
-        String sourceLanguage = source == Language.AUTO ? "auto-detect" : source.name();
-        String targetLanguage = target.name();
+        String sourceLanguage = source == Language.AUTO ? "auto-detect" : source.getLanguageName();
+        String targetLanguage = target.getLanguageName();
 
         return String.format(
                 "Translate the following text from %s to %s. " +
@@ -87,8 +87,8 @@ public class GeminiTranslationClient implements TranslationClient {
     }
 
     private String buildBatchTranslationPrompt(Language source, Language target, List<String> texts) {
-        String sourceLanguage = source == Language.AUTO ? "auto-detect" : source.name();
-        String targetLanguage = target.name();
+        String sourceLanguage = source == Language.AUTO ? "auto-detect" : source.getLanguageName();
+        String targetLanguage = target.getLanguageName();
 
         String numberedTexts = IntStream.range(0, texts.size())
                 .mapToObj(i -> String.format("%d. %s", i + 1, texts.get(i)))

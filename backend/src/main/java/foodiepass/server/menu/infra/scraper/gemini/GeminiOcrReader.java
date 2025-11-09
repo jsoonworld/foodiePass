@@ -51,8 +51,12 @@ public class GeminiOcrReader implements OcrReader {
 
             log.debug("Gemini OCR response: {}", jsonResponse);
 
+            // Clean up JSON response before parsing
+            final String cleanedJson = cleanJsonResponse(jsonResponse);
+            log.debug("Cleaned JSON response: {}", cleanedJson);
+
             // Parse JSON to DTO
-            final List<MenuItemOcrDto> dtos = objectMapper.readValue(jsonResponse, new TypeReference<>() {});
+            final List<MenuItemOcrDto> dtos = objectMapper.readValue(cleanedJson, new TypeReference<>() {});
 
             // Convert DTOs to MenuItem domain objects
             return dtos.stream()
@@ -68,5 +72,23 @@ public class GeminiOcrReader implements OcrReader {
     private MenuItem convertToMenuItem(MenuItemOcrDto dto) {
         final Price price = new Price(DEFAULT_CURRENCY, BigDecimal.valueOf(dto.getPrice()));
         return new MenuItem(dto.getName(), price, null);
+    }
+
+    /**
+     * Clean up Gemini's JSON response by removing invalid characters
+     * that may cause JSON parsing errors.
+     */
+    private String cleanJsonResponse(String jsonResponse) {
+        if (jsonResponse == null) {
+            return null;
+        }
+
+        // Remove standalone underscore characters (often added by Gemini as line breaks)
+        String cleaned = jsonResponse.replaceAll("(?m)^\\s*_\\s*$", "");
+
+        // Remove trailing commas before closing brackets/braces
+        cleaned = cleaned.replaceAll(",\\s*([\\]}])", "$1");
+
+        return cleaned;
     }
 }

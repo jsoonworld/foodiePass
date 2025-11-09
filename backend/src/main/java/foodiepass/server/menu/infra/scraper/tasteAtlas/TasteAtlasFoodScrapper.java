@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component("tasteAtlasFoodScrapper")
-@Profile("!local & !performance-test")  // local 환경에서는 MockFoodScrapper 사용
+@Profile("!performance-test & !local")  // performance-test, local 환경 제외
 @RequiredArgsConstructor
 public class TasteAtlasFoodScrapper implements FoodScrapper {
 
