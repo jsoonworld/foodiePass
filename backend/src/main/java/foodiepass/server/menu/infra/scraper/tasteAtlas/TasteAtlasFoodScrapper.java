@@ -7,7 +7,6 @@ import foodiepass.server.menu.infra.config.TasteAtlasProperties;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.dto.TasteAtlasResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;

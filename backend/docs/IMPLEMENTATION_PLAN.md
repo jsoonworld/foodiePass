@@ -21,6 +21,7 @@ Phase 2: Survey 모듈 구현
   └─ Step 9: SurveyController 구현
 
 Phase 3: MenuScan API 구현
+  ├─ Step 9.5: 공통 인프라 (GlobalExceptionHandler, ErrorResponse)
   ├─ Step 10: MenuScanRequest/Response DTO 구현
   ├─ Step 11: MenuScanController 구현
   └─ Step 12: 통합 테스트
@@ -1528,6 +1529,43 @@ Phase 2에서 개선할 점:
 - [ ] A/B 그룹 배정이 올바르게 동작하는가?
 - [ ] 기존 MenuService와의 통합이 잘 되는가?
 - [ ] 처리 시간 측정 로직이 정확한가?
+
+---
+
+## Step 9.5: 공통 인프라 구현 (GlobalExceptionHandler, ErrorResponse)
+
+### 9.5.1 요구사항 정의
+- [ ] GlobalExceptionHandler: 모든 컨트롤러의 예외를 중앙 집중 처리
+- [ ] ErrorResponse DTO: 일관된 에러 응답 형식
+- [ ] Custom Exception: EntityNotFoundException 등
+
+### 9.5.2 🔴 RED - 테스트 작성
+- [ ] `GlobalExceptionHandlerTest.java` 생성
+- [ ] Validation 예외 처리 테스트 (MethodArgumentNotValidException)
+- [ ] IllegalArgumentException 처리 테스트
+- [ ] EntityNotFoundException 처리 테스트
+- [ ] 일반 예외 처리 테스트
+- [ ] 테스트 실행 → 실패 확인
+
+### 9.5.3 🟢 GREEN - 최소 구현
+- [ ] `ErrorResponse.java` record 생성
+- [ ] `EntityNotFoundException.java` 생성
+- [ ] `GlobalExceptionHandler.java` 생성
+- [ ] @RestControllerAdvice 구현
+- [ ] 테스트 실행 → 통과 확인
+
+### 9.5.4 🔵 REFACTOR - 리팩토링
+- [ ] HTTP Status Code 매핑 확인
+- [ ] 에러 메시지 명확성 개선
+- [ ] 테스트 실행 → 통과 확인
+
+### 9.5.5 ✅ VERIFY - 검증
+- [ ] 전체 테스트 실행
+- [ ] Git commit
+
+**참고**:
+- ARCHITECTURE.md 섹션 "예외 처리 전략"에 상세 설계 참조
+- 모든 컨트롤러에서 공통으로 사용되는 인프라이므로 Phase 3 시작 전에 구현
 
 ---
 
