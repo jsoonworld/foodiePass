@@ -45,13 +45,19 @@ Cookie: JSESSIONID=<session-id>
 
 **Request Parameters**:
 
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---|---|
-| `base64EncodedImage` | String (Base64) | Y | 메뉴판 이미지 (Base64 인코딩) |
-| `originLanguageName` | String | N | 원본 언어명 (예: "English", "auto") |
-| `userLanguageName` | String | Y | 사용자 언어명 (예: "Korean", "English", "Japanese") |
-| `originCurrencyName` | String | N | 원본 화폐명 (예: "USD Dollar", auto-detect 가능) |
-| `userCurrencyName` | String | Y | 사용자 화폐명 (예: "KRW Won", "USD Dollar", "JPY Yen") |
+| 필드 | 타입 | 필수 | 설명 | 기본값 |
+|---|---|---|---|---|
+| `base64EncodedImage` | String (Base64) | Y | 메뉴판 이미지 (Base64 인코딩) | - |
+| `originLanguageName` | String | N | 원본 언어명 (예: "English", "Japanese") | "auto" |
+| `userLanguageName` | String | Y | 사용자 언어명 (예: "Korean", "English", "Japanese") | - |
+| `originCurrencyName` | String | N | 원본 화폐명 (예: "USD Dollar", "JPY Yen") | "auto" |
+| `userCurrencyName` | String | Y | 사용자 화폐명 (예: "KRW Won", "USD Dollar", "JPY Yen") | - |
+
+**검증 규칙**:
+- `base64EncodedImage`: null이거나 빈 문자열일 수 없음
+- `userLanguageName`: null이거나 빈 문자열일 수 없음
+- `userCurrencyName`: null이거나 빈 문자열일 수 없음
+- `originLanguageName`, `originCurrencyName`: 생략 시 자동으로 "auto"로 설정됨
 
 **참고**: 기존 v1 API와의 호환성을 위해 언어/화폐 필드명은 ReconfigureRequest와 동일하게 유지됩니다.
 
@@ -160,6 +166,23 @@ Cookie: JSESSIONID=<session-id>
 | `items[].matchConfidence` | Number | 매칭 신뢰도 (0-1, Treatment만) |
 | `processingTime` | Number | 처리 시간 (초) |
 
+**Control vs Treatment 응답 차이**:
+
+응답 DTO는 `@JsonInclude(JsonInclude.Include.NON_NULL)`을 사용하여, **null 필드는 JSON 응답에서 자동으로 제외**됩니다.
+
+| 필드 | Control 그룹 | Treatment 그룹 |
+|---|---|---|
+| `description` | ❌ null → JSON에서 제외 | ✅ 음식 설명 포함 |
+| `imageUrl` | ❌ null → JSON에서 제외 | ✅ 음식 사진 URL 포함 |
+| `matchConfidence` | ❌ null → JSON에서 제외 | ✅ 매칭 신뢰도 포함 |
+| `originalName` | ✅ 포함 | ✅ 포함 |
+| `translatedName` | ✅ 포함 | ✅ 포함 |
+| `priceInfo` | ✅ 포함 | ✅ 포함 |
+
+**구현 로직**:
+1. **Control 그룹**: 번역 + 환율 변환만 수행, FoodInfo 매칭 건너뜀
+2. **Treatment 그룹**: 번역 + 환율 변환 + FoodInfo 매칭 수행
+
 ---
 
 **Error Responses**:
@@ -235,6 +258,10 @@ Content-Type: application/json
 | `scanId` | UUID | Y | 메뉴 스캔 세션 ID (`/api/menus/scan`에서 받은 값) |
 | `hasConfidence` | Boolean | Y | 확신 여부 (Yes=true, No=false) |
 
+**검증 규칙**:
+- `scanId`: @NotNull 검증, null일 수 없음
+- `hasConfidence`: @NotNull 검증, null일 수 없음 (true/false만 허용)
+
 ---
 
 **Response**:
@@ -280,70 +307,83 @@ Content-Type: application/json
 
 #### GET /api/admin/ab-test/results
 
-**목적**: A/B 테스트 결과 분석 (Control vs Treatment 응답률 비교)
+**목적**: A/B 테스트 스캔 통계 조회 (그룹별 스캔 개수)
 
-**검증 가설**: H3 (사용자 행동/인지 가설)
+**검증 가설**: H2 (기술 실현 가설 - 파이프라인 동작 확인)
 
 ---
 
 **Request Headers**:
 ```http
 Authorization: Bearer <admin-token>
-```text
-
-**Query Parameters**:
-
-| 필드 | 타입 | 필수 | 설명 |
-|---|---|---|---|
-| `startDate` | String (ISO8601) | N | 시작 날짜 (기본값: 전체) |
-| `endDate` | String (ISO8601) | N | 종료 날짜 (기본값: 현재) |
-
----
+```
 
 **Response**:
 ```json
 {
-  "control": {
-    "totalResponses": 10,
-    "yesCount": 3,
-    "noCount": 7,
-    "yesRate": 0.30
-  },
-  "treatment": {
-    "totalResponses": 10,
-    "yesCount": 8,
-    "noCount": 2,
-    "yesRate": 0.80
-  },
-  "comparison": {
-    "ratio": 2.67,
-    "hypothesisValidated": true
-  },
-  "metadata": {
-    "startDate": "2025-11-01T00:00:00Z",
-    "endDate": "2025-11-10T23:59:59Z",
-    "generatedAt": "2025-11-10T12:00:00Z"
-  }
+  "controlCount": 50,
+  "treatmentCount": 50,
+  "totalScans": 100
 }
-```text
+```
 
 **Response Fields**:
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| `control.totalResponses` | Number | Control 그룹 총 응답 수 |
+| `controlCount` | Number | Control 그룹 총 스캔 수 |
+| `treatmentCount` | Number | Treatment 그룹 총 스캔 수 |
+| `totalScans` | Number | 전체 스캔 수 (controlCount + treatmentCount) |
+
+---
+
+### 4. 설문 분석 결과 API (관리자용)
+
+#### GET /api/admin/surveys/analytics
+
+**목적**: 설문 응답 분석 및 H3 가설 검증 (Control vs Treatment 확신도 비교)
+
+**검증 가설**: H1, H3 (핵심 가치 가설, 사용자 행동/인지 가설)
+
+---
+
+**Request Headers**:
+```http
+Authorization: Bearer <admin-token>
+```
+
+**Response**:
+```json
+{
+  "control": {
+    "total": 100,
+    "yesCount": 30,
+    "yesRate": 0.30
+  },
+  "treatment": {
+    "total": 100,
+    "yesCount": 80,
+    "yesRate": 0.80
+  },
+  "ratio": 2.67
+}
+```
+
+**Response Fields**:
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `control.total` | Number | Control 그룹 총 응답 수 |
 | `control.yesCount` | Number | Control 그룹 Yes 응답 수 |
-| `control.noCount` | Number | Control 그룹 No 응답 수 |
-| `control.yesRate` | Number | Control 그룹 Yes 응답률 (0-1) |
-| `treatment.totalResponses` | Number | Treatment 그룹 총 응답 수 |
+| `control.yesRate` | Number | Control 그룹 Yes 응답률 (0.0-1.0) |
+| `treatment.total` | Number | Treatment 그룹 총 응답 수 |
 | `treatment.yesCount` | Number | Treatment 그룹 Yes 응답 수 |
-| `treatment.noCount` | Number | Treatment 그룹 No 응답 수 |
-| `treatment.yesRate` | Number | Treatment 그룹 Yes 응답률 (0-1) |
-| `comparison.ratio` | Number | Treatment / Control Yes 응답률 비율 |
-| `comparison.hypothesisValidated` | Boolean | H3 검증 여부 (ratio ≥ 2.0) |
-| `metadata.startDate` | String | 분석 시작 날짜 |
-| `metadata.endDate` | String | 분석 종료 날짜 |
-| `metadata.generatedAt` | String | 결과 생성 시각 |
+| `treatment.yesRate` | Number | Treatment 그룹 Yes 응답률 (0.0-1.0) |
+| `ratio` | Number or null | Treatment / Control Yes 응답률 비율 (Control yesRate가 0이면 null) |
+
+**H3 가설 검증**:
+- **목표**: `ratio ≥ 2.0` (Treatment 그룹의 Yes 응답률이 Control 그룹 대비 2배 이상)
+- **성공 기준**: Treatment Yes Rate ≥ 70% AND Ratio ≥ 2.0
 
 ---
 
@@ -519,6 +559,105 @@ export async function submitSurvey(scanId: string, hasConfidence: boolean): Prom
   await api.post('/api/surveys', { scanId, hasConfidence });
 }
 ```bash
+
+---
+
+## DTO 요약
+
+### Request DTOs
+
+#### MenuScanRequest
+```java
+public record MenuScanRequest(
+    String base64EncodedImage,  // Required
+    String originLanguageName,  // Optional, default "auto"
+    String userLanguageName,    // Required
+    String originCurrencyName,  // Optional, default "auto"
+    String userCurrencyName     // Required
+)
+```
+
+**검증**:
+- Canonical constructor에서 필수 필드 검증
+- 선택 필드는 자동으로 "auto" 설정
+
+#### SurveyRequest
+```java
+public class SurveyRequest {
+    @NotNull UUID scanId;           // Required
+    @NotNull Boolean hasConfidence; // Required
+}
+```
+
+**검증**:
+- `@NotNull` 검증 어노테이션 사용
+- Spring Validation으로 자동 검증
+
+---
+
+### Response DTOs
+
+#### MenuScanResponse
+```java
+public record MenuScanResponse(
+    UUID scanId,
+    String abGroup,           // "CONTROL" | "TREATMENT"
+    List<MenuItemDto> items,
+    double processingTime
+)
+```
+
+#### MenuItemDto
+```java
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public record MenuItemDto(
+    UUID id,
+    String originalName,
+    String translatedName,
+    String description,      // null for CONTROL
+    String imageUrl,         // null for CONTROL
+    PriceInfoDto priceInfo,
+    Double matchConfidence   // null for CONTROL
+)
+```
+
+**중요**: `@JsonInclude(NON_NULL)`로 인해 null 필드는 JSON 응답에서 제외됨
+
+#### PriceInfoDto
+```java
+public record PriceInfoDto(
+    double originalAmount,
+    String originalCurrency,
+    String originalFormatted,
+    double convertedAmount,
+    String convertedCurrency,
+    String convertedFormatted
+)
+```
+
+#### ABTestResult
+```java
+public record ABTestResult(
+    long controlCount,
+    long treatmentCount,
+    long totalScans
+)
+```
+
+#### SurveyAnalytics
+```java
+public class SurveyAnalytics {
+    GroupAnalytics control;
+    GroupAnalytics treatment;
+    Double ratio;  // null if controlYesRate is 0
+
+    public static class GroupAnalytics {
+        long total;
+        long yesCount;
+        double yesRate;
+    }
+}
+```
 
 ---
 
