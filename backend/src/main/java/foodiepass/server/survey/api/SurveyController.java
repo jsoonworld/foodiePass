@@ -37,8 +37,8 @@ public class SurveyController {
             @Valid @RequestBody SurveyRequest request) {
         try {
             surveyService.saveSurveyResponse(
-                    request.getScanId(),
-                    request.getHasConfidence()
+                    request.scanId(),
+                    request.hasConfidence()
             );
 
             return ResponseEntity.ok(Map.of(

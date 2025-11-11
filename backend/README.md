@@ -41,7 +41,7 @@ node reconfigure-menu-load-test.js
 
 ## Project Structure
 
-```
+```text
 backend/
 ├── src/
 │   ├── main/
