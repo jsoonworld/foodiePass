@@ -3,7 +3,7 @@
 *.iml
 *.iws
 *.ipr
-out/
+# out/ - Removed to allow src/*/port/out directories
 
 ### Eclipse / STS ###
 .apt_generated/
