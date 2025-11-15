@@ -427,10 +427,10 @@ EOF
 ```bash
 mkdir -p src/test/java/foodiepass/server/menu/infra
 
-cat > src/test/java/foodiepass/server/menu/infra/TasteAtlasFoodScrapperIntegrationTest.java << 'EOF'
+cat > src/test/java/foodiepass/server/menu/infra/TasteAtlasFoodScraperIntegrationTest.java << 'EOF'
 package foodiepass.server.menu.infra;
 
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -446,11 +446,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("dev")
 @DisplayName("TasteAtlas 스크래핑 통합 테스트")
-class TasteAtlasFoodScrapperIntegrationTest {
+class TasteAtlasFoodScraperIntegrationTest {
 
     @Autowired
-    @Qualifier("tasteAtlasFoodScrapper")
-    private FoodScrapper foodScrapper;
+    @Qualifier("tasteAtlasFoodScraper")
+    private FoodScraper foodScrapper;
 
     @Test
     @DisplayName("실제 음식 정보 스크래핑 - Sushi")
@@ -504,7 +504,7 @@ EOF
 #### 테스트 실행
 
 ```bash
-./gradlew test --tests TasteAtlasFoodScrapperIntegrationTest
+./gradlew test --tests TasteAtlasFoodScraperIntegrationTest
 ```bash
 
 #### 검증
@@ -623,7 +623,7 @@ EOF
 - [ ] test-menu.jpg 이미지 준비
 - [ ] GeminiOcrIntegrationTest 작성 및 통과
 - [ ] GoogleTranslationIntegrationTest 작성 및 통과
-- [ ] TasteAtlasFoodScrapperIntegrationTest 작성 및 통과
+- [ ] TasteAtlasFoodScraperIntegrationTest 작성 및 통과
 - [ ] GoogleFinanceRateProviderIntegrationTest 작성 및 통과
 - [ ] 모든 개별 API 테스트 통과 확인
 
@@ -1476,7 +1476,7 @@ tail -f ~/foodiePass/backend/app.log
 ### Phase 2: 개별 API 단위 테스트 (로컬)
 - [ ] GeminiOcrIntegrationTest 통과
 - [ ] GoogleTranslationIntegrationTest 통과
-- [ ] TasteAtlasFoodScrapperIntegrationTest 통과
+- [ ] TasteAtlasFoodScraperIntegrationTest 통과
 - [ ] GoogleFinanceRateProviderIntegrationTest 통과
 
 ### Phase 3: 부분 통합 테스트 (로컬)

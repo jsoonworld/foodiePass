@@ -1,6 +1,6 @@
 package foodiepass.server.menu.infra.scraper.tasteAtlas;
 
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.domain.FoodInfo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,11 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("TasteAtlas 스크래핑 통합 테스트 - 실제 TasteAtlas API 호출")
-class TasteAtlasFoodScrapperIntegrationTest {
+class TasteAtlasFoodScraperIntegrationTest {
 
     @Autowired
-    @Qualifier("tasteAtlasFoodScrapper")
-    private FoodScrapper foodScrapper;
+    @Qualifier("tasteAtlasFoodScraper")
+    private FoodScraper foodScrapper;
 
     @Test
     @DisplayName("실제 음식 정보 스크래핑 - Sushi")

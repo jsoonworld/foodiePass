@@ -272,7 +272,7 @@ private OcrReader ocrReader;
 private TranslationClient translationClient;
 
 @MockBean
-private FoodScrapper foodScrapper;
+private FoodScraper foodScrapper;
 
 @MockBean
 private ExchangeRateProvider exchangeRateProvider;
@@ -287,7 +287,7 @@ private ExchangeRateProvider exchangeRateProvider;
 - `testControlGroupResponse_NoFoodInfo()`: FoodInfo fields are null
 - `testControlGroupResponse_HasPriceInfo()`: PriceInfo is included
 - `testControlGroupResponse_HasTranslation()`: Translation is included
-- `testControlGroup_NoScrapingCalls()`: FoodScrapper is NOT called (performance)
+- `testControlGroup_NoScrapingCalls()`: FoodScraper is NOT called (performance)
 
 **Coverage Target**: 100% of CONTROL path
 
@@ -298,7 +298,7 @@ private ExchangeRateProvider exchangeRateProvider;
 - `testTreatmentGroupResponse_HasFoodInfo()`: FoodInfo fields are included
 - `testTreatmentGroupResponse_HasPriceInfo()`: PriceInfo is included
 - `testTreatmentGroupResponse_HasTranslation()`: Translation is included
-- `testTreatmentGroup_ScrapingCalled()`: FoodScrapper is called
+- `testTreatmentGroup_ScrapingCalled()`: FoodScraper is called
 - `testTreatmentGroup_ImageUrlValid()`: imageUrl is valid URL
 - `testTreatmentGroup_DescriptionNotEmpty()`: description is not empty
 

@@ -20,9 +20,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class GeminiFoodScrapperTest {
+class GeminiFoodScraperTest {
 
-    private GeminiFoodScrapper geminiFoodScrapper;
+    private GeminiFoodScraper geminiFoodScraper;
 
     @Mock
     private GeminiClient geminiClient;
@@ -32,7 +32,7 @@ class GeminiFoodScrapperTest {
 
     @BeforeEach
     void setUp() {
-        geminiFoodScrapper = new GeminiFoodScrapper(geminiClient, objectMapper);
+        geminiFoodScraper = new GeminiFoodScraper(geminiClient, objectMapper);
     }
 
     @Test
@@ -46,7 +46,7 @@ class GeminiFoodScrapperTest {
         when(geminiClient.generateText(anyString())).thenReturn(jsonResponse);
 
         // when
-        final Flux<FoodInfo> result = geminiFoodScrapper.scrapAsync(List.of(foodName));
+        final Flux<FoodInfo> result = geminiFoodScraper.scrapAsync(List.of(foodName));
 
         // then
         StepVerifier.create(result)
@@ -71,7 +71,7 @@ class GeminiFoodScrapperTest {
         final List<String> foodNames = List.of(foodName, foodName); // 동일한 음식을 두 번 요청
 
         // when
-        final Flux<FoodInfo> result = geminiFoodScrapper.scrapAsync(foodNames);
+        final Flux<FoodInfo> result = geminiFoodScraper.scrapAsync(foodNames);
 
         // then
         // 결과 스트림을 소비하여 스크래핑이 실행되도록 합니다.

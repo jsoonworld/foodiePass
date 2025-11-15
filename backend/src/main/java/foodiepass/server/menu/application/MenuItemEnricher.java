@@ -3,7 +3,7 @@ package foodiepass.server.menu.application;
 import foodiepass.server.currency.application.CurrencyService;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.language.domain.Language;
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
@@ -19,14 +19,14 @@ import java.util.List;
 @Service
 public class MenuItemEnricher {
 
-    private final FoodScrapper foodScraper;
+    private final FoodScraper foodScraper;
     private final TranslationClient translationClient;
     private final CurrencyService currencyService;
 
     private static final Language ENGLISH = Language.fromLanguageName("English");
 
     public MenuItemEnricher(
-            FoodScrapper foodScraper,
+            FoodScraper foodScraper,
             TranslationClient translationClient,
             CurrencyService currencyService
     ) {

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 음식 정보(이름, 설명, 이미지)를 스크래핑하는 인터페이스
  */
-public interface FoodScrapper {
+public interface FoodScraper {
 
     /**
      * 여러 음식 이름에 대한 정보를 비동기로 스크래핑합니다.

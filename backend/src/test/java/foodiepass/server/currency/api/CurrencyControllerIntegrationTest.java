@@ -7,7 +7,7 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest.OrderElement
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
 import foodiepass.server.global.success.SuccessResponse;
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -54,8 +54,8 @@ class CurrencyControllerIntegrationTest {
         }
 
         @Bean
-        public FoodScrapper foodScrapper() {
-            return mock(FoodScrapper.class);
+        public FoodScraper foodScrapper() {
+            return mock(FoodScraper.class);
         }
     }
 

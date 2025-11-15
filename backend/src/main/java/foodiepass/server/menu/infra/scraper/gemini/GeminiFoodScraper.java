@@ -3,7 +3,7 @@ package foodiepass.server.menu.infra.scraper.gemini;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foodiepass.server.global.config.ProfileConstants;
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.exception.GeminiErrorCode;
 import foodiepass.server.menu.infra.exception.GeminiException;
@@ -21,10 +21,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Component("geminiFoodScrapper")
+@Component("geminiFoodScraper")
 @Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
 @RequiredArgsConstructor
-public class GeminiFoodScrapper implements FoodScrapper {
+public class GeminiFoodScraper implements FoodScraper {
 
     private static final String FOOD_INFO_PROMPT_TEMPLATE = """
         Get the 200-character description and image url for food %s.
