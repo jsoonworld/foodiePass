@@ -205,13 +205,13 @@ public interface OcrReader {
 
 ---
 
-**FoodScrapper** (`menu.application.port.out.FoodScrapper`)
+**FoodScraper** (`menu.application.port.out.FoodScraper`)
 ```java
-public interface FoodScrapper {
+public interface FoodScraper {
     Mono<FoodInfo> scrap(String foodName);
 }
 ```java
-**구현체**: `TasteAtlasFoodScrapper` (재사용)
+**구현체**: `TasteAtlasFoodScraper` (재사용)
 
 ---
 
@@ -327,8 +327,8 @@ public enum Currency {
 
 ---
 
-#### TasteAtlasFoodScrapper
-**위치**: `foodiepass.server.menu.infra.TasteAtlasFoodScrapper`
+#### TasteAtlasFoodScraper
+**위치**: `foodiepass.server.menu.infra.TasteAtlasFoodScraper`
 
 **역할**: TasteAtlas 음식 정보 스크래핑
 
@@ -560,7 +560,7 @@ public class RedisConfig {
 - [ ] `MenuItemEnricher`
 - [ ] `GeminiOcrReader` (OCR)
 - [ ] `GoogleTranslationClient` (번역)
-- [ ] `TasteAtlasFoodScrapper` (음식 매칭)
+- [ ] `TasteAtlasFoodScraper` (음식 매칭)
 - [ ] `CurrencyService` (환율 변환)
 - [ ] `Language` enum
 - [ ] `Currency` enum

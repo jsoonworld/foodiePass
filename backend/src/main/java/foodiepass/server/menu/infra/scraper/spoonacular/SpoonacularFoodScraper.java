@@ -1,6 +1,6 @@
 package foodiepass.server.menu.infra.scraper.spoonacular;
 
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.infra.config.SpoonacularProperties;
 import lombok.RequiredArgsConstructor;
@@ -16,28 +16,28 @@ import java.time.Duration;
 import java.util.List;
 
 @Slf4j
-@Component("spoonacularFoodScrapper")
+@Component("spoonacularFoodScraper")
 @Primary
 @Profile("local")
 @RequiredArgsConstructor
-public class SpoonacularFoodScrapper implements FoodScrapper {
+public class SpoonacularFoodScraper implements FoodScraper {
 
     private final WebClient webClient;
     private final SpoonacularProperties properties;
 
     @Override
     public Flux<FoodInfo> scrapAsync(final List<String> foodNames) {
-        log.info("[SpoonacularFoodScrapper] Starting batch scraping: {} foods", foodNames.size());
+        log.info("[SpoonacularFoodScraper] Starting batch scraping: {} foods", foodNames.size());
         return Flux.fromIterable(foodNames)
                 .delayElements(Duration.ofMillis(200))  // Rate limiting
                 .flatMap(this::searchFood)
                 .onErrorContinue((error, obj) ->
-                        log.warn("[SpoonacularFoodScrapper] Error scraping food '{}': {}", obj, error.getMessage())
+                        log.warn("[SpoonacularFoodScraper] Error scraping food '{}': {}", obj, error.getMessage())
                 );
     }
 
     private Mono<FoodInfo> searchFood(String foodName) {
-        log.debug("[SpoonacularFoodScrapper] Searching food: '{}'", foodName);
+        log.debug("[SpoonacularFoodScraper] Searching food: '{}'", foodName);
 
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -52,7 +52,7 @@ public class SpoonacularFoodScrapper implements FoodScrapper {
                 .map(response -> {
                     if (response.menuItems() != null && !response.menuItems().isEmpty()) {
                         SpoonacularMenuItem item = response.menuItems().get(0);
-                        log.info("[SpoonacularFoodScrapper] Found food: '{}' -> image: {}", foodName, item.image());
+                        log.info("[SpoonacularFoodScraper] Found food: '{}' -> image: {}", foodName, item.image());
                         return new FoodInfo(
                                 item.title(),
                                 properties.getDefaults().description(),  // Spoonacular menu item search doesn't include description
@@ -60,12 +60,12 @@ public class SpoonacularFoodScrapper implements FoodScrapper {
                                 item.image()
                         );
                     } else {
-                        log.warn("[SpoonacularFoodScrapper] No results for '{}', using defaults", foodName);
+                        log.warn("[SpoonacularFoodScraper] No results for '{}', using defaults", foodName);
                         return createDefaultFoodInfo(foodName);
                     }
                 })
                 .onErrorResume(error -> {
-                    log.error("[SpoonacularFoodScrapper] Error searching food '{}': {}", foodName, error.getMessage());
+                    log.error("[SpoonacularFoodScraper] Error searching food '{}': {}", foodName, error.getMessage());
                     return Mono.just(createDefaultFoodInfo(foodName));
                 });
     }

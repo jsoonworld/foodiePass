@@ -22,9 +22,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TasteAtlasFoodScrapperTest {
+class TasteAtlasFoodScraperTest {
 
-    private TasteAtlasFoodScrapper foodScrapper;
+    private TasteAtlasFoodScraper foodScrapper;
 
     @Mock
     private TasteAtlasApiClient apiClient;
@@ -43,7 +43,7 @@ class TasteAtlasFoodScrapperTest {
                 new TasteAtlasProperties.Defaults("default_image.jpg", "default description"),
                 null // selector
         );
-        foodScrapper = new TasteAtlasFoodScrapper(apiClient, pageParser, properties);
+        foodScrapper = new TasteAtlasFoodScraper(apiClient, pageParser, properties);
     }
 
     @Test

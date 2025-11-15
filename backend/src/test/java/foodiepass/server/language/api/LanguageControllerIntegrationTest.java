@@ -3,7 +3,7 @@ package foodiepass.server.language.api;
 import foodiepass.server.global.success.SuccessResponse;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.language.dto.response.LanguageResponse;
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,8 +41,8 @@ class LanguageControllerIntegrationTest {
         }
 
         @Bean
-        public FoodScrapper foodScrapper() {
-            return mock(FoodScrapper.class);
+        public FoodScraper foodScrapper() {
+            return mock(FoodScraper.class);
         }
     }
 

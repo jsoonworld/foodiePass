@@ -1,6 +1,6 @@
 package foodiepass.server.global.config.mocks;
 
-import foodiepass.server.menu.application.port.out.FoodScrapper;
+import foodiepass.server.menu.application.port.out.FoodScraper;
 import foodiepass.server.menu.domain.FoodInfo;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Profile("performance-test")
-public class MockFoodScrapper implements FoodScrapper {
+public class MockFoodScraper implements FoodScraper {
 
     private static final Map<String, FoodInfo> MOCK_DATA = Map.of(
             "김치찌개", new FoodInfo("김치찌개", "매콤하고 맛있는 김치찌개", "mock_kimchi.jpg", "mock_kimchi_preview.jpg"),
