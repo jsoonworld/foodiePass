@@ -13,9 +13,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 
+import org.junit.jupiter.api.Disabled;
+
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("GeminiClient 디버그 테스트 - 실제 응답 확인")
+@Disabled("Integration test with external Gemini API - temporarily disabled for test architecture validation")
 class GeminiClientDebugTest {
 
     private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";

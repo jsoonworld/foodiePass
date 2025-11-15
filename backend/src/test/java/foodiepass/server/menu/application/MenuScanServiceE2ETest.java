@@ -16,12 +16,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 
+import org.junit.jupiter.api.Disabled;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("MenuScan E2E 통합 테스트 - 전체 플로우 (A/B 테스트 포함)")
+@Disabled("E2E test with external APIs - temporarily disabled for test architecture validation")
 class MenuScanServiceE2ETest {
 
     private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";

@@ -2,6 +2,7 @@ package foodiepass.server.global.config.mocks;
 
 import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.domain.Currency;
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import foodiepass.server.menu.domain.MenuItem;
 import org.springframework.context.annotation.Profile;
@@ -11,7 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Component
-@Profile("performance-test")
+@Profile(ProfileConstants.TEST_OR_PERFORMANCE_TEST)
 public class MockOcrReader implements OcrReader {
 
     @Override

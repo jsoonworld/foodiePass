@@ -3,36 +3,43 @@ package foodiepass.server.menu.application;
 import foodiepass.server.currency.application.CurrencyService;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.language.domain.Language;
-import foodiepass.server.menu.application.port.out.FoodScraper;
+import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.FoodItemResponse;
 import foodiepass.server.menu.dto.response.ReconfigureResponse.PriceInfoResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class MenuItemEnricher {
 
-    private final FoodScraper foodScraper;
+    private final FoodScrapper foodScraper;
     private final TranslationClient translationClient;
     private final CurrencyService currencyService;
+    private final CacheManager cacheManager;
 
     private static final Language ENGLISH = Language.fromLanguageName("English");
+    private static final String ENRICHMENTS_CACHE = "enrichments";
 
     public MenuItemEnricher(
-            FoodScraper foodScraper,
+            FoodScrapper foodScraper,
             TranslationClient translationClient,
-            CurrencyService currencyService
+            CurrencyService currencyService,
+            CacheManager cacheManager
     ) {
         this.foodScraper = foodScraper;
         this.translationClient = translationClient;
         this.currencyService = currencyService;
+        this.cacheManager = cacheManager;
     }
 
     public Mono<FoodItemResponse> enrichAsync(
@@ -88,6 +95,63 @@ public class MenuItemEnricher {
             return Mono.just(List.of());
         }
 
+        // Generate cache key
+        String cacheKey = generateCacheKey(menuItems, originLanguage, userLanguage, originCurrency, userCurrency);
+
+        // Check cache first
+        Cache cache = cacheManager.getCache(ENRICHMENTS_CACHE);
+        if (cache != null) {
+            Cache.ValueWrapper cachedValue = cache.get(cacheKey);
+            if (cachedValue != null && cachedValue.get() != null) {
+                @SuppressWarnings("unchecked")
+                List<FoodItemResponse> cached = (List<FoodItemResponse>) cachedValue.get();
+                log.info("Enrichment cache HIT for key: {}", cacheKey);
+                return Mono.just(cached);
+            }
+        }
+
+        log.info("Enrichment cache MISS for key: {}", cacheKey);
+
+        // Cache miss: perform enrichment
+        return performEnrichment(menuItems, originLanguage, userLanguage, originCurrency, userCurrency)
+                .doOnSuccess(result -> {
+                    if (cache != null) {
+                        cache.put(cacheKey, result);
+                        log.info("Enrichment result cached for key: {}", cacheKey);
+                    }
+                });
+    }
+
+    /**
+     * Generates a cache key for enrichment results based on menu items and language/currency settings.
+     * Format: sorted_menu_names#originLang_userLang_originCur_userCur
+     */
+    private String generateCacheKey(List<MenuItem> menuItems, Language originLanguage,
+                                    Language userLanguage, Currency originCurrency, Currency userCurrency) {
+        String sortedNames = menuItems.stream()
+                .map(MenuItem::getName)
+                .sorted()
+                .collect(Collectors.joining("_"));
+
+        return String.format("%s#%s_%s_%s_%s",
+                sortedNames,
+                originLanguage.getLanguageCode(),
+                userLanguage.getLanguageCode(),
+                originCurrency.getCurrencyCode(),
+                userCurrency.getCurrencyCode()
+        );
+    }
+
+    /**
+     * Performs the actual enrichment logic (translation, food scraping, currency conversion).
+     */
+    private Mono<List<FoodItemResponse>> performEnrichment(
+            final List<MenuItem> menuItems,
+            final Language originLanguage,
+            final Language userLanguage,
+            final Currency originCurrency,
+            final Currency userCurrency
+    ) {
         // Step 1: Batch translate menu names to English (for food matching) AND to user language (for display)
         List<String> menuNames = menuItems.stream()
                 .map(MenuItem::getName)

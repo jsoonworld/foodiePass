@@ -27,4 +27,9 @@ public interface MenuScanRepository extends JpaRepository<MenuScan, UUID> {
      */
     @Query("SELECT m.abGroup, COUNT(m) FROM MenuScan m GROUP BY m.abGroup")
     List<Object[]> countGroupByAbGroup();
+
+    /**
+     * imageHash로 MenuScan 조회 (캐시 히트 체크용)
+     */
+    Optional<MenuScan> findByImageHash(String imageHash);
 }

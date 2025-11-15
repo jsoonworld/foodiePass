@@ -31,7 +31,7 @@
    ```bash
    # Terminal 1: Backend
    cd backend
-   export SPOONACULAR_API_KEY="YOUR_SPOONACULAR_API_KEY"
+   export SPOONACULAR_API_KEY="your-api-key-here"
    ./gradlew bootRun --args='--spring.profiles.active=local'
 
    # Terminal 2: Frontend
@@ -205,7 +205,7 @@ git status
 git log --oneline -5
 
 # 3. 서버 시작
-cd backend && export SPOONACULAR_API_KEY="YOUR_SPOONACULAR_API_KEY" && ./gradlew bootRun --args='--spring.profiles.active=local' &
+cd backend && export SPOONACULAR_API_KEY="your-api-key-here" && ./gradlew bootRun --args='--spring.profiles.active=local' &
 cd frontend && npm run dev &
 
 # 4. 테스트 시작

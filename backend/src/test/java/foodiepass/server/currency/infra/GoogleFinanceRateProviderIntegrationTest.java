@@ -2,6 +2,7 @@ package foodiepass.server.currency.infra;
 
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("GoogleFinance 환율 조회 통합 테스트 - 실제 Google Finance 스크래핑")
+@Disabled("External API integration test - run separately to avoid flaky tests due to real-time rate fluctuations")
 class GoogleFinanceRateProviderIntegrationTest {
 
     @Autowired

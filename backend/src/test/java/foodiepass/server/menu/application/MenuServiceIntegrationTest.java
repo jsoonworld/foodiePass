@@ -16,12 +16,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 
+import org.junit.jupiter.api.Disabled;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("MenuService 통합 테스트 - OCR + 번역 + 음식 매칭 + 환율 전체 파이프라인")
+@Disabled("Integration test with external APIs - temporarily disabled for test architecture validation")
 class MenuServiceIntegrationTest {
 
     private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";

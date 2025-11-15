@@ -1,5 +1,6 @@
 package foodiepass.server.global.config.mocks;
 
+import foodiepass.server.global.config.ProfileConstants;
 import foodiepass.server.language.domain.Language;
 import foodiepass.server.menu.application.port.out.TranslationClient;
 import org.springframework.context.annotation.Profile;
@@ -10,7 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 @Component
-@Profile("performance-test")
+@Profile(ProfileConstants.TEST_OR_PERFORMANCE_TEST)
 public class MockTranslationClient implements TranslationClient {
 
     @Override

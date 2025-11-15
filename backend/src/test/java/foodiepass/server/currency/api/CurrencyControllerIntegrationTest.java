@@ -7,7 +7,8 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest.OrderElement
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
 import foodiepass.server.global.success.SuccessResponse;
-import foodiepass.server.menu.application.port.out.FoodScraper;
+import foodiepass.server.menu.application.MenuService;
+import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.application.port.out.OcrReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -36,8 +37,7 @@ import static org.mockito.Mockito.mock;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(CurrencyControllerIntegrationTest.TestConfig.class)
-@DisplayName("CurrencyController 통합 테스트 - 실제 API 호출")
+@DisplayName("CurrencyController 통합 테스트")
 class CurrencyControllerIntegrationTest {
 
     @Autowired
@@ -45,19 +45,6 @@ class CurrencyControllerIntegrationTest {
 
     @Autowired
     private ExchangeRateCache exchangeRateCache;
-
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public OcrReader ocrReader() {
-            return mock(OcrReader.class);
-        }
-
-        @Bean
-        public FoodScraper foodScrapper() {
-            return mock(FoodScraper.class);
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -77,7 +64,7 @@ class CurrencyControllerIntegrationTest {
         void returnsAllCurrencies() {
             // when: 실제 HTTP GET 요청
             ResponseEntity<SuccessResponse<List<CurrencyResponse>>> response = restTemplate.exchange(
-                    "/currency",
+                    "/api/currency",
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -105,7 +92,7 @@ class CurrencyControllerIntegrationTest {
         void eachCurrencyContainsCurrencyName() {
             // when: 실제 HTTP GET 요청
             ResponseEntity<SuccessResponse<List<CurrencyResponse>>> response = restTemplate.exchange(
-                    "/currency",
+                    "/api/currency",
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -128,7 +115,7 @@ class CurrencyControllerIntegrationTest {
         void containsExpectedCurrencies() {
             // when: 실제 HTTP GET 요청
             ResponseEntity<SuccessResponse<List<CurrencyResponse>>> response = restTemplate.exchange(
-                    "/currency",
+                    "/api/currency",
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -174,7 +161,7 @@ class CurrencyControllerIntegrationTest {
 
             // when: 실제 HTTP POST 요청
             ResponseEntity<SuccessResponse<CalculatePriceResponse>> response = restTemplate.exchange(
-                    "/currency/calculate",
+                    "/api/currency/calculate",
                     HttpMethod.POST,
                     new org.springframework.http.HttpEntity<>(request),
                     new ParameterizedTypeReference<>() {}
@@ -216,7 +203,7 @@ class CurrencyControllerIntegrationTest {
 
             // when: 실제 HTTP POST 요청
             ResponseEntity<SuccessResponse<CalculatePriceResponse>> response = restTemplate.exchange(
-                    "/currency/calculate",
+                    "/api/currency/calculate",
                     HttpMethod.POST,
                     new org.springframework.http.HttpEntity<>(request),
                     new ParameterizedTypeReference<>() {}
@@ -247,7 +234,7 @@ class CurrencyControllerIntegrationTest {
 
             // when: 실제 HTTP POST 요청
             ResponseEntity<SuccessResponse<CalculatePriceResponse>> response = restTemplate.exchange(
-                    "/currency/calculate",
+                    "/api/currency/calculate",
                     HttpMethod.POST,
                     new org.springframework.http.HttpEntity<>(request),
                     new ParameterizedTypeReference<>() {}
@@ -284,7 +271,7 @@ class CurrencyControllerIntegrationTest {
 
             // when: 실제 HTTP POST 요청
             ResponseEntity<String> response = restTemplate.exchange(
-                    "/currency/calculate",
+                    "/api/currency/calculate",
                     HttpMethod.POST,
                     new org.springframework.http.HttpEntity<>(request),
                     String.class
@@ -307,7 +294,7 @@ class CurrencyControllerIntegrationTest {
 
             // when: 실제 HTTP POST 요청
             ResponseEntity<SuccessResponse<CalculatePriceResponse>> response = restTemplate.exchange(
-                    "/currency/calculate",
+                    "/api/currency/calculate",
                     HttpMethod.POST,
                     new org.springframework.http.HttpEntity<>(request),
                     new ParameterizedTypeReference<>() {}

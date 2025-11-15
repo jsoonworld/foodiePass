@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @Slf4j
 @Component
-@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
+@Profile(ProfileConstants.NOT_TEST_AND_NOT_PERFORMANCE_TEST)
 public class GeminiClient {
 
     private final GenerativeModel multimodalModel;

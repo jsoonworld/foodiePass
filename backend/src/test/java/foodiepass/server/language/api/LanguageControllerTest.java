@@ -50,7 +50,7 @@ class LanguageControllerTest {
         when(languageService.findAllLanguages()).thenReturn(mockLanguages);
 
         // When & Then
-        mockMvc.perform(get("/language")
+        mockMvc.perform(get("/api/language")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
@@ -68,7 +68,7 @@ class LanguageControllerTest {
         when(languageService.findAllLanguages()).thenReturn(List.of());
 
         // When & Then
-        mockMvc.perform(get("/language")
+        mockMvc.perform(get("/api/language")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
@@ -86,7 +86,7 @@ class LanguageControllerTest {
         when(languageService.findAllLanguages()).thenReturn(mockLanguages);
 
         // When & Then
-        mockMvc.perform(get("/language")
+        mockMvc.perform(get("/api/language")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0]").exists())
@@ -104,7 +104,7 @@ class LanguageControllerTest {
         when(languageService.findAllLanguages()).thenReturn(mockLanguages);
 
         // When & Then
-        mockMvc.perform(get("/language"))
+        mockMvc.perform(get("/api/language"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -127,7 +127,7 @@ class LanguageControllerTest {
         when(languageService.findAllLanguages()).thenReturn(mockLanguages);
 
         // When & Then
-        mockMvc.perform(get("/language")
+        mockMvc.perform(get("/api/language")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$").isArray())
