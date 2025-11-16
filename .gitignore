@@ -129,6 +129,15 @@ scripts/.venv/
 scripts/__pycache__/
 *.pyc
 
+# Scripts node_modules
+scripts/node_modules/
+scripts/package-lock.json
+
+# Large test images
+backend/docs/*.png
+backend/docs/*.jpg
+backend/docs/*.jpeg
+
 # Claude settings (local)
 .claude/settings.local.json
 **/.claude/settings.local.json
