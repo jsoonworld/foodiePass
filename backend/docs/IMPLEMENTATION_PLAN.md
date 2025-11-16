@@ -1897,3 +1897,166 @@ open build/reports/jacoco/test/html/index.html
   1. 실패하는 단위 테스트를 작성할 때까지 프로덕션 코드를 작성하지 않는다
   2. 컴파일은 실패하지 않으면서 실행이 실패하는 정도로만 단위 테스트를 작성한다
   3. 현재 실패하는 테스트를 통과할 정도로만 실제 코드를 작성한다
+
+---
+
+# 🚀 Phase 3: Execution Plan (Token-Efficient Sessions)
+
+> **목적**: Phase 1-4의 구현을 토큰 효율적으로 5개 세션으로 나누어 진행
+>
+> 각 세션은 독립적으로 완료 가능하며, 세션 종료 시 커밋 체크포인트 생성
+
+---
+
+## Phase 3-1: 백엔드 도메인 & 서비스 레이어 (~2-3시간)
+
+### 📋 구현 범위
+- ABGroup enum
+- MenuScan entity (도메인 모델)
+- SurveyResponse entity
+- MenuScanRepository
+- SurveyResponseRepository
+- ABTestService (그룹 배정, 결과 분석)
+- SurveyService (응답 저장, 통계 조회)
+- 단위 테스트 (>80% 커버리지)
+
+### ✅ 완료 기준
+- [ ] 모든 도메인 모델 구현 및 테스트
+- [ ] Repository 계층 구현 및 @DataJpaTest 통과
+- [ ] Service 계층 구현 및 @SpringBootTest 통과
+- [ ] 테스트 커버리지 >80%
+- [ ] `./gradlew test` 전체 통과
+- [ ] Git commit: "feat: Implement ABTest and Survey domain & service layers"
+
+### 🔑 핵심 비즈니스 로직
+- A/B 그룹 배정: 신규 사용자 50:50 랜덤, 기존 사용자는 이전 그룹 유지
+- 설문 분석: Control vs Treatment 그룹별 Yes 응답률 계산
+- H3 가설 검증: Treatment / Control 비율 >= 2.0 확인
+
+---
+
+## Phase 3-2: 백엔드 API 레이어 (~2-3시간)
+
+### 📋 구현 범위
+- GlobalExceptionHandler (공통 예외 처리)
+- ErrorResponse DTO
+- MenuScanController (POST /api/menus/scan)
+- SurveyController (POST /api/surveys)
+- ABTestController (GET /api/admin/ab-test/results)
+- Request/Response DTO
+- 기존 MenuService 수정 (Treatment 그룹만 FoodInfo 포함)
+- API 통합 테스트
+
+### ✅ 완료 기준
+- [ ] GlobalExceptionHandler 구현 및 테스트
+- [ ] 모든 Controller 구현 및 @WebMvcTest 통과
+- [ ] Request/Response DTO 검증 추가
+- [ ] 기존 MenuService A/B 로직 통합
+- [ ] API 통합 테스트 (@SpringBootTest) 통과
+- [ ] Postman Collection 작성 및 수동 테스트
+- [ ] API 문서 업데이트
+- [ ] Git commit: "feat: Implement ABTest and Survey API controllers"
+
+### 🔑 핵심 API 로직
+- POST /api/menus/scan: A/B 그룹 배정 → MenuService 호출 → 조건부 응답
+- Control 그룹: FoodInfo 제거
+- Treatment 그룹: FoodInfo 포함
+
+---
+
+## Phase 3-3: 프론트엔드 기본 구조 (~2시간)
+
+### 📋 구현 범위
+- React/Next.js 프로젝트 초기화
+- 프로젝트 구조 설정
+- API 클라이언트 구현
+- 공통 컴포넌트 (Button, Input, Layout)
+- 라우팅 설정
+- 환경 변수 설정
+
+### ✅ 완료 기준
+- [ ] Next.js 프로젝트 초기화 완료
+- [ ] API 클라이언트 구현 (Axios/Fetch wrapper)
+- [ ] 공통 컴포넌트 4개 구현
+- [ ] 라우팅 설정 (/, /menu/[scanId], /survey/[scanId])
+- [ ] 환경 변수 설정 (NEXT_PUBLIC_API_URL)
+- [ ] `npm run dev` 로컬 실행 확인
+- [ ] Git commit: "feat: Initialize frontend project structure"
+
+---
+
+## Phase 3-4: 프론트엔드 핵심 기능 (~3-4시간)
+
+### 📋 구현 범위
+- 메뉴 업로드 페이지 (사진 업로드, 언어/화폐 선택)
+- Control UI (텍스트 번역만 표시)
+- Treatment UI (사진 + 설명 + 환율 표시)
+- A/B 그룹 기반 조건부 렌더링
+- 설문 컴포넌트 (확신도 질문)
+- 로딩/에러 상태 처리
+
+### ✅ 완료 기준
+- [ ] 업로드 페이지 구현 및 동작 확인
+- [ ] Control UI 구현 (FoodInfo 제외)
+- [ ] Treatment UI 구현 (FoodInfo 포함)
+- [ ] 조건부 렌더링 로직 구현 (abGroup 기반)
+- [ ] 설문 페이지 구현
+- [ ] 로딩/에러 상태 처리
+- [ ] E2E 수동 테스트 (Chrome DevTools)
+- [ ] Git commit: "feat: Implement menu upload and A/B test UI"
+
+### 🔑 핵심 UI 로직
+- Control 그룹: 메뉴명(번역) + 가격(환율) 표시
+- Treatment 그룹: 음식 사진 + 설명 + 메뉴명(번역) + 가격(환율) 표시
+- 설문: "이 메뉴를 보고 주문할 확신이 생기셨나요?" (Yes/No)
+
+---
+
+## Phase 3-5: 통합 및 검증 (~2-3시간)
+
+### 📋 구현 범위
+- E2E 플로우 테스트 (Playwright 또는 수동)
+- 성능 검증 (처리 시간 ≤ 5초)
+- A/B 테스트 데이터 무결성 검증
+- OCR/매칭 정확도 테스트 (샘플 메뉴 10개)
+- 버그 수정 및 리팩토링
+- 배포 준비 (환경 설정 문서화)
+
+### 🧪 테스트 시나리오
+1. **Control 그룹 플로우**
+   - 메뉴 업로드 → Control 그룹 배정 → 텍스트 전용 UI → 설문 제출
+2. **Treatment 그룹 플로우**
+   - 메뉴 업로드 → Treatment 그룹 배정 → 사진 포함 UI → 설문 제출
+3. **관리자 결과 조회**
+   - GET /api/admin/ab-test/results 호출 → Control/Treatment 개수 확인
+
+### ✅ 완료 기준
+- [ ] E2E 테스트 10회 성공 (Control 5회, Treatment 5회)
+- [ ] 처리 시간 평균 ≤ 5초 (10개 샘플 기준)
+- [ ] A/B 그룹 배정 정확성 확인 (DB 데이터)
+- [ ] OCR 정확도 확인 (수동 검증)
+- [ ] 모든 버그 수정 완료
+- [ ] 배포 환경 설정 문서 작성
+- [ ] Git commit: "test: Add E2E tests and performance validation"
+- [ ] PR 생성: `feature/phase3-mvp-implementation` → `develop`
+
+### 🎯 H2 가설 검증 준비
+- [ ] 기술 검증 스크립트 작성
+- [ ] 샘플 데이터 10개 준비
+- [ ] 정확도 측정 자동화
+
+---
+
+## 🔄 세션 전환 가이드
+
+각 Phase 완료 후:
+1. ✅ 모든 테스트 통과 확인
+2. 💾 Git commit 생성
+3. 📝 다음 Phase 시작 전 브리핑 확인
+4. 🔄 필요 시 세션 재시작
+
+세션 중단 시:
+- 현재 Phase의 진행 상황 기록
+- 미완료 작업 TodoWrite에 추가
+- Git stash 또는 WIP commit
+- 다음 세션 시 이어서 진행

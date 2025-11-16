@@ -3,8 +3,16 @@ package foodiepass.server.menu.application;
 import foodiepass.server.abtest.application.ABTestService;
 import foodiepass.server.abtest.domain.ABGroup;
 import foodiepass.server.abtest.domain.MenuScan;
+import foodiepass.server.abtest.repository.MenuScanRepository;
+import foodiepass.server.cache.domain.MenuItemEntity;
+import foodiepass.server.cache.repository.MenuItemRepository;
+import foodiepass.server.common.price.domain.Price;
+import foodiepass.server.currency.domain.Currency;
+import foodiepass.server.language.domain.Language;
+import foodiepass.server.menu.application.port.out.OcrReader;
+import foodiepass.server.menu.domain.FoodInfo;
+import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.dto.request.MenuScanRequest;
-import foodiepass.server.menu.dto.request.ReconfigureRequest;
 import foodiepass.server.menu.dto.response.MenuScanResponse;
 import foodiepass.server.menu.dto.response.ReconfigureResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,12 +25,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,14 +44,24 @@ class MenuScanServiceTest {
     private ABTestService abTestService;
 
     @Mock
-    private MenuService menuService;
+    private MenuItemEnricher menuItemEnricher;
+
+    @Mock
+    private OcrReader ocrReader;
+
+    @Mock
+    private MenuScanRepository menuScanRepository;
+
+    @Mock
+    private MenuItemRepository menuItemRepository;
 
     @InjectMocks
     private MenuScanService menuScanService;
 
     private MenuScanRequest validRequest;
     private String testUserId;
-    private ReconfigureResponse mockReconfigureResponse;
+    private List<MenuItem> mockMenuItems;
+    private List<ReconfigureResponse.FoodItemResponse> mockFoodItemResponses;
 
     @BeforeEach
     void setUp() {
@@ -48,28 +69,41 @@ class MenuScanServiceTest {
 
         validRequest = new MenuScanRequest(
             "base64EncodedImage",
-            "ja",
-            "ko",
-            "JPY",
-            "KRW"
+            "Japanese",
+            "Korean",
+            "Japanese Yen",
+            "South Korean won"
         );
 
-        mockReconfigureResponse = new ReconfigureResponse(
-            List.of(
-                new ReconfigureResponse.FoodItemResponse(
-                    "Sushi",
-                    "스시",
-                    "Fresh raw fish with rice",
-                    "https://example.com/sushi.jpg",
-                    new ReconfigureResponse.PriceInfoResponse("¥1,500", "₩20,000")
-                ),
-                new ReconfigureResponse.FoodItemResponse(
-                    "Ramen",
-                    "라멘",
-                    "Japanese noodle soup",
-                    "https://example.com/ramen.jpg",
-                    new ReconfigureResponse.PriceInfoResponse("¥800", "₩10,500")
-                )
+        // Mock OCR results (MenuItem)
+        mockMenuItems = List.of(
+            new MenuItem(
+                "Sushi",
+                new Price(Currency.JAPANESE_YEN, new BigDecimal("1500")),
+                new FoodInfo("Sushi", "Initial", "initial.jpg", "preview.jpg")
+            ),
+            new MenuItem(
+                "Ramen",
+                new Price(Currency.JAPANESE_YEN, new BigDecimal("800")),
+                new FoodInfo("Ramen", "Initial", "initial.jpg", "preview.jpg")
+            )
+        );
+
+        // Mock enriched results (FoodItemResponse)
+        mockFoodItemResponses = List.of(
+            new ReconfigureResponse.FoodItemResponse(
+                "Sushi",
+                "스시",
+                "Fresh raw fish with rice",
+                "https://example.com/sushi.jpg",
+                new ReconfigureResponse.PriceInfoResponse("¥1,500", "₩20,000")
+            ),
+            new ReconfigureResponse.FoodItemResponse(
+                "Ramen",
+                "라멘",
+                "Japanese noodle soup",
+                "https://example.com/ramen.jpg",
+                new ReconfigureResponse.PriceInfoResponse("¥800", "₩10,500")
             )
         );
     }
@@ -82,18 +116,31 @@ class MenuScanServiceTest {
             testUserId,
             ABGroup.CONTROL,
             null,
-            "ja",
-            "ko",
-            "JPY",
-            "KRW"
+            "Japanese",
+            "Korean",
+            "Japanese Yen",
+            "South Korean won"
         );
+        controlScan.setImageHash("test-image-hash");
 
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
         when(abTestService.assignAndCreateScan(
-            eq(testUserId), isNull(), eq("ja"), eq("ko"), eq("JPY"), eq("KRW")
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
         )).thenReturn(controlScan);
 
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(mockReconfigureResponse));
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(mockFoodItemResponses));
 
         // When
         Mono<MenuScanResponse> result = menuScanService.scanMenu(validRequest, testUserId);
@@ -126,10 +173,12 @@ class MenuScanServiceTest {
             })
             .verifyComplete();
 
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
         verify(abTestService, times(1)).assignAndCreateScan(
-            eq(testUserId), isNull(), eq("ja"), eq("ko"), eq("JPY"), eq("KRW")
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
         );
-        verify(menuService, times(1)).reconfigure(any(ReconfigureRequest.class));
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -140,18 +189,31 @@ class MenuScanServiceTest {
             testUserId,
             ABGroup.TREATMENT,
             null,
-            "ja",
-            "ko",
-            "JPY",
-            "KRW"
+            "Japanese",
+            "Korean",
+            "Japanese Yen",
+            "South Korean won"
         );
+        treatmentScan.setImageHash("test-image-hash");
 
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
         when(abTestService.assignAndCreateScan(
-            eq(testUserId), isNull(), eq("ja"), eq("ko"), eq("JPY"), eq("KRW")
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
         )).thenReturn(treatmentScan);
 
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(mockReconfigureResponse));
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(mockFoodItemResponses));
 
         // When
         Mono<MenuScanResponse> result = menuScanService.scanMenu(validRequest, testUserId);
@@ -184,24 +246,38 @@ class MenuScanServiceTest {
             })
             .verifyComplete();
 
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
         verify(abTestService, times(1)).assignAndCreateScan(
-            eq(testUserId), isNull(), eq("ja"), eq("ko"), eq("JPY"), eq("KRW")
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
         );
-        verify(menuService, times(1)).reconfigure(any(ReconfigureRequest.class));
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("처리 시간이 올바르게 계산되어야 함")
     void scanMenu_calculates_processing_time() {
         // Given
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "ja", "ko", "JPY", "KRW");
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "Japanese", "Korean", "Japanese Yen", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
 
-        // Simulate slow operation with delay
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(mockReconfigureResponse).delayElement(java.time.Duration.ofMillis(100)));
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment with delay (simulate slow operation)
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(mockFoodItemResponses).delayElement(java.time.Duration.ofMillis(100)));
 
         // When
         Mono<MenuScanResponse> result = menuScanService.scanMenu(validRequest, testUserId);
@@ -213,35 +289,53 @@ class MenuScanServiceTest {
                 assertThat(response.processingTime()).isLessThan(1.0);  // Should be under 1 second
             })
             .verifyComplete();
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("다양한 통화 형식의 가격 파싱 테스트")
     void scanMenu_handles_various_price_formats() {
         // Given
-        ReconfigureResponse diversePriceResponse = new ReconfigureResponse(
-            List.of(
-                new ReconfigureResponse.FoodItemResponse(
-                    "Item1", "아이템1", "desc", "img",
-                    new ReconfigureResponse.PriceInfoResponse("$15.00", "₩20,000")
-                ),
-                new ReconfigureResponse.FoodItemResponse(
-                    "Item2", "아이템2", "desc", "img",
-                    new ReconfigureResponse.PriceInfoResponse("€10.50", "₩14,500")
-                ),
-                new ReconfigureResponse.FoodItemResponse(
-                    "Item3", "아이템3", "desc", "img",
-                    new ReconfigureResponse.PriceInfoResponse("£8.99", "₩12,000")
-                )
+        List<ReconfigureResponse.FoodItemResponse> diversePriceResponses = List.of(
+            new ReconfigureResponse.FoodItemResponse(
+                "Item1", "아이템1", "desc", "img",
+                new ReconfigureResponse.PriceInfoResponse("$15.00", "₩20,000")
+            ),
+            new ReconfigureResponse.FoodItemResponse(
+                "Item2", "아이템2", "desc", "img",
+                new ReconfigureResponse.PriceInfoResponse("€10.50", "₩14,500")
+            ),
+            new ReconfigureResponse.FoodItemResponse(
+                "Item3", "아이템3", "desc", "img",
+                new ReconfigureResponse.PriceInfoResponse("£8.99", "₩12,000")
             )
         );
 
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "en", "ko", "USD", "KRW");
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "English", "Korean", "United States Dollar", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(diversePriceResponse));
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment with diverse price formats
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(diversePriceResponses));
 
         // When
         Mono<MenuScanResponse> result = menuScanService.scanMenu(validRequest, testUserId);
@@ -270,19 +364,39 @@ class MenuScanServiceTest {
                 });
             })
             .verifyComplete();
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("빈 응답에 대한 처리 테스트")
     void scanMenu_handles_empty_response() {
         // Given
-        ReconfigureResponse emptyResponse = new ReconfigureResponse(List.of());
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
+        List<ReconfigureResponse.FoodItemResponse> emptyResponses = List.of();
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "Japanese", "Korean", "Japanese Yen", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(emptyResponse));
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment with empty response
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(emptyResponses));
 
         // When
         Mono<MenuScanResponse> result = menuScanService.scanMenu(validRequest, testUserId);
@@ -295,51 +409,87 @@ class MenuScanServiceTest {
                 assertThat(response.abGroup()).isEqualTo("CONTROL");
             })
             .verifyComplete();
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
-    @DisplayName("ReconfigureRequest가 올바르게 생성되는지 테스트")
+    @DisplayName("enrichBatchAsync가 올바른 파라미터로 호출되는지 테스트")
     void scanMenu_creates_correct_reconfigure_request() {
         // Given
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "Japanese", "Korean", "Japanese Yen", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
-            .thenReturn(Mono.just(mockReconfigureResponse));
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
+            .thenReturn(Mono.just(mockFoodItemResponses));
 
         // When
         menuScanService.scanMenu(validRequest, testUserId).block();
 
         // Then
-        verify(menuService).reconfigure(argThat(request -> {
-            assertThat(request.base64EncodedImage()).isEqualTo("base64EncodedImage");
-            assertThat(request.originLanguageName()).isEqualTo("ja");
-            assertThat(request.userLanguageName()).isEqualTo("ko");
-            assertThat(request.originCurrencyName()).isEqualTo("JPY");
-            assertThat(request.userCurrencyName()).isEqualTo("KRW");
-            return true;
-        }));
+        verify(menuItemEnricher).enrichBatchAsync(
+            argThat(items -> items.size() == 2),
+            eq(Language.JAPANESE),
+            eq(Language.KOREAN),
+            eq(Currency.JAPANESE_YEN),
+            eq(Currency.SOUTH_KOREAN_WON)
+        );
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
     }
 
     @Test
     @DisplayName("null 가격 정보 처리 테스트")
     void scanMenu_handles_null_price_info() {
         // Given
-        ReconfigureResponse responseWithNullPrice = new ReconfigureResponse(
-            List.of(
-                new ReconfigureResponse.FoodItemResponse(
-                    "Item", "아이템", "desc", "img",
-                    new ReconfigureResponse.PriceInfoResponse(null, null)
-                )
+        List<ReconfigureResponse.FoodItemResponse> responseWithNullPrice = List.of(
+            new ReconfigureResponse.FoodItemResponse(
+                "Item", "아이템", "desc", "img",
+                new ReconfigureResponse.PriceInfoResponse(null, null)
             )
         );
 
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "ja", "ko", "JPY", "KRW");
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.TREATMENT, null, "Japanese", "Korean", "Japanese Yen", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment with null price
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
             .thenReturn(Mono.just(responseWithNullPrice));
 
         // When
@@ -355,26 +505,44 @@ class MenuScanServiceTest {
                 assertThat(priceInfo.convertedCurrency()).isEqualTo("UNKNOWN");
             })
             .verifyComplete();
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 
     @Test
     @DisplayName("잘못된 형식의 가격 문자열 처리 테스트")
     void scanMenu_handles_invalid_price_format() {
         // Given
-        ReconfigureResponse responseWithInvalidPrice = new ReconfigureResponse(
-            List.of(
-                new ReconfigureResponse.FoodItemResponse(
-                    "Item", "아이템", "desc", "img",
-                    new ReconfigureResponse.PriceInfoResponse("invalid", "also-invalid")
-                )
+        List<ReconfigureResponse.FoodItemResponse> responseWithInvalidPrice = List.of(
+            new ReconfigureResponse.FoodItemResponse(
+                "Item", "아이템", "desc", "img",
+                new ReconfigureResponse.PriceInfoResponse("invalid", "also-invalid")
             )
         );
 
-        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "ja", "ko", "JPY", "KRW");
+        MenuScan scan = MenuScan.create(testUserId, ABGroup.CONTROL, null, "Japanese", "Korean", "Japanese Yen", "South Korean won");
 
-        when(abTestService.assignAndCreateScan(any(), any(), any(), any(), any(), any()))
-            .thenReturn(scan);
-        when(menuService.reconfigure(any(ReconfigureRequest.class)))
+        // Mock: Cache miss
+        when(menuScanRepository.findByImageHash(anyString())).thenReturn(Optional.empty());
+
+        // Mock: A/B test assignment
+        when(abTestService.assignAndCreateScan(
+            eq(testUserId), isNull(), anyString(), eq("Japanese"), eq("Korean"), eq("Japanese Yen"), eq("South Korean won")
+        )).thenReturn(scan);
+
+        // Mock: OCR reading
+        when(ocrReader.read(anyString())).thenReturn(mockMenuItems);
+
+        // Mock: Save menu items
+        when(menuItemRepository.saveAll(any())).thenReturn(null);
+
+        // Mock: Enrichment with invalid price format
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class),
+            any(Currency.class), any(Currency.class)))
             .thenReturn(Mono.just(responseWithInvalidPrice));
 
         // When
@@ -390,5 +558,11 @@ class MenuScanServiceTest {
                 assertThat(priceInfo.convertedCurrency()).isEqualTo("UNKNOWN");
             })
             .verifyComplete();
+
+        // Verify
+        verify(menuScanRepository, times(1)).findByImageHash(anyString());
+        verify(abTestService, times(1)).assignAndCreateScan(any(), isNull(), anyString(), any(), any(), any(), any());
+        verify(ocrReader, times(1)).read(anyString());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 }

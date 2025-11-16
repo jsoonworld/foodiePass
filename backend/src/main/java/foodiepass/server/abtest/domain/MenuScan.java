@@ -47,6 +47,13 @@ public class MenuScan {
     @Column(length = 100)
     private String targetCurrency;
 
+    /**
+     * SHA-256 hash of the menu image for deduplication.
+     * Used to avoid redundant API calls for the same menu image.
+     */
+    @Column(length = 64, unique = true)
+    private String imageHash;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -97,5 +104,15 @@ public class MenuScan {
         if (abGroup == null) {
             throw new IllegalArgumentException("abGroup cannot be null");
         }
+    }
+
+    /**
+     * Sets the imageHash for deduplication.
+     * Should be called after creation with computed hash.
+     *
+     * @param imageHash SHA-256 hash of the menu image
+     */
+    public void setImageHash(String imageHash) {
+        this.imageHash = imageHash;
     }
 }

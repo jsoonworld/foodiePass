@@ -1,1 +1,8 @@
 .env
+
+# Google Cloud Service Account credentials (sensitive)
+src/main/resources/*.json
+
+# Log files
+*.log
+logs/

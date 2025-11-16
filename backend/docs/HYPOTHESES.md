@@ -63,7 +63,7 @@
 | **H1** | A/B 그룹 배정 및 조건부 처리 | `ABTestService`, `MenuService` |
 | **H2** | OCR 파이프라인 | `GeminiOcrReader` (재사용) |
 | **H2** | 번역 파이프라인 | `GoogleTranslationClient` (재사용) |
-| **H2** | 음식 매칭 파이프라인 | `TasteAtlasFoodScraper` (재사용) |
+| **H2** | 음식 매칭 파이프라인 | `TasteAtlasFoodScrapper` (재사용) |
 | **H2** | 환율 변환 | `CurrencyService` (재사용) |
 | **H2** | 성능 최적화 (≤ 5초) | 비동기 처리, 캐싱 (Redis) |
 | **H3** | 설문 응답 수집 | `SurveyService` |

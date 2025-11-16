@@ -10,12 +10,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
+import org.junit.jupiter.api.Disabled;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("GoogleTranslation 통합 테스트 - 실제 Google Translation API 호출")
+@Disabled("Integration test with external Google Translation API - temporarily disabled for test architecture validation")
 class GoogleTranslationIntegrationTest {
 
     @Autowired

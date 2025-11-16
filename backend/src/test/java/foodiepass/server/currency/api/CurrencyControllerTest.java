@@ -62,7 +62,7 @@ class CurrencyControllerTest {
         when(currencyService.findAllCurrencies()).thenReturn(mockCurrencies);
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(get("/currency")
+        MvcResult mvcResult = mockMvc.perform(get("/api/currency")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -84,7 +84,7 @@ class CurrencyControllerTest {
         when(currencyService.findAllCurrencies()).thenReturn(List.of());
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(get("/currency")
+        MvcResult mvcResult = mockMvc.perform(get("/api/currency")
                 .contentType(MediaType.APPLICATION_JSON))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -126,7 +126,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -170,7 +170,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -214,7 +214,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -256,7 +256,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -290,7 +290,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -332,7 +332,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())
@@ -359,7 +359,7 @@ class CurrencyControllerTest {
 
         // When & Then
         try {
-            MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+            MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(request().asyncStarted())
@@ -402,7 +402,7 @@ class CurrencyControllerTest {
             .thenReturn(Mono.just(mockResponse));
 
         // When & Then
-        MvcResult mvcResult = mockMvc.perform(post("/currency/calculate")
+        MvcResult mvcResult = mockMvc.perform(post("/api/currency/calculate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(request().asyncStarted())

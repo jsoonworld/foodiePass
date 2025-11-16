@@ -61,8 +61,8 @@ class MenuServiceTest {
 
         // Mocking
         when(ocrReader.read(request.base64EncodedImage())).thenReturn(ocrResult);
-        when(menuItemEnricher.enrichAsync(eq(menuItem1), any(Language.class), any(Language.class), any(Currency.class), any(Currency.class)))
-                .thenReturn(Mono.just(enrichedItem1));
+        when(menuItemEnricher.enrichBatchAsync(any(), any(Language.class), any(Language.class), any(Currency.class), any(Currency.class)))
+                .thenReturn(Mono.just(List.of(enrichedItem1)));
 
         // when
         Mono<ReconfigureResponse> responseMono = menuService.reconfigure(request);
@@ -78,6 +78,6 @@ class MenuServiceTest {
                 .verifyComplete();
 
         verify(ocrReader, times(1)).read(request.base64EncodedImage());
-        verify(menuItemEnricher, times(1)).enrichAsync(any(), any(), any(), any(), any());
+        verify(menuItemEnricher, times(1)).enrichBatchAsync(any(), any(), any(), any(), any());
     }
 }

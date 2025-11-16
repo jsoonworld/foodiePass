@@ -3,17 +3,27 @@ package foodiepass.server.menu.application;
 import foodiepass.server.abtest.application.ABTestService;
 import foodiepass.server.abtest.domain.ABGroup;
 import foodiepass.server.abtest.domain.MenuScan;
+import foodiepass.server.abtest.repository.MenuScanRepository;
+import foodiepass.server.cache.domain.MenuItemEntity;
+import foodiepass.server.cache.repository.MenuItemRepository;
+import foodiepass.server.cache.util.ImageHashUtil;
+import foodiepass.server.currency.domain.Currency;
+import foodiepass.server.language.domain.Language;
+import foodiepass.server.menu.application.port.out.OcrReader;
+import foodiepass.server.menu.domain.MenuItem;
 import foodiepass.server.menu.dto.request.MenuScanRequest;
 import foodiepass.server.menu.dto.request.ReconfigureRequest;
 import foodiepass.server.menu.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,10 +37,14 @@ import java.util.stream.Collectors;
 public class MenuScanService {
 
     private final ABTestService abTestService;
-    private final MenuService menuService;
+    private final MenuItemEnricher menuItemEnricher;
+    private final OcrReader ocrReader;
+    private final MenuScanRepository menuScanRepository;
+    private final MenuItemRepository menuItemRepository;
 
     /**
-     * Scans a menu image and returns enriched results based on A/B test group
+     * Scans a menu image and returns enriched results based on A/B test group.
+     * Uses imageHash for deduplication to avoid redundant API calls.
      *
      * @param request Menu scan request with image and language/currency preferences
      * @param userId User session identifier
@@ -39,11 +53,96 @@ public class MenuScanService {
     public Mono<MenuScanResponse> scanMenu(MenuScanRequest request, String userId) {
         Instant startTime = Instant.now();
 
-        // Step 1 & 2: Atomically assign A/B group and create MenuScan record
-        // This prevents race conditions with concurrent requests
+        // Step 1: Compute imageHash for deduplication
+        String imageHash = ImageHashUtil.computeHash(request.base64EncodedImage());
+        log.info("Computed imageHash: {}", imageHash);
+
+        // Step 2: Check if this image has been processed before
+        Optional<MenuScan> cachedScan = menuScanRepository.findByImageHash(imageHash);
+
+        if (cachedScan.isPresent()) {
+            log.info("Cache HIT for imageHash: {}", imageHash);
+            return handleCacheHit(cachedScan.get(), userId,
+                request.originLanguageName(), request.userLanguageName(),
+                request.originCurrencyName(), request.userCurrencyName(),
+                startTime);
+        }
+
+        log.info("Cache MISS for imageHash: {}", imageHash);
+        return handleCacheMiss(request, userId, imageHash, startTime);
+    }
+
+    /**
+     * Handles cache hit: Load menu items from DB, enrich, and return response.
+     * This avoids expensive OCR API calls while still performing translation/enrichment.
+     */
+    private Mono<MenuScanResponse> handleCacheHit(MenuScan cachedScan, String userId, String originLanguageName,
+                                                   String userLanguageName, String originCurrencyName,
+                                                   String userCurrencyName, Instant startTime) {
+        // Create new MenuScan for this user (for analytics)
+        MenuScan newMenuScan = abTestService.assignAndCreateScan(
+            userId,
+            null,
+            null, // No imageHash for cache hit analytics scan
+            originLanguageName,
+            userLanguageName,
+            originCurrencyName,
+            userCurrencyName
+        );
+
+        ABGroup abGroup = newMenuScan.getAbGroup();
+        log.info("User {} assigned to A/B group: {} (cache hit)", userId, abGroup);
+
+        // Load menu items (OCR results) from DB
+        List<MenuItemEntity> menuItemEntities = menuItemRepository.findByMenuScanId(cachedScan.getId());
+        log.info("Loaded {} menu items from cache (OCR results)", menuItemEntities.size());
+
+        List<MenuItem> menuItems = menuItemEntities.stream()
+            .map(MenuItemEntity::toMenuItem)
+            .collect(Collectors.toList());
+
+        // Perform enrichment (translation, food scraping, currency conversion)
+        Language originLanguage = Language.fromLanguageName(originLanguageName);
+        Language userLanguage = Language.fromLanguageName(userLanguageName);
+        Currency originCurrency = Currency.fromCurrencyName(originCurrencyName);
+        Currency userCurrency = Currency.fromCurrencyName(userCurrencyName);
+
+        return menuItemEnricher.enrichBatchAsync(
+                menuItems,
+                originLanguage,
+                userLanguage,
+                originCurrency,
+                userCurrency
+            )
+            .map(foodItemResponses -> {
+                // Convert to DTOs with A/B group filtering
+                List<MenuItemDto> itemDtos = foodItemResponses.stream()
+                    .map(item -> convertToDto(item, abGroup))
+                    .collect(Collectors.toList());
+
+                double processingTime = Duration.between(startTime, Instant.now()).toMillis() / 1000.0;
+
+                log.info("Menu scan completed (cache hit) for user {} in {}s with {} items",
+                    userId, processingTime, itemDtos.size());
+
+                return new MenuScanResponse(
+                    newMenuScan.getId(),
+                    abGroup.name(),
+                    itemDtos,
+                    processingTime
+                );
+            });
+    }
+
+    /**
+     * Handles cache miss: Execute OCR pipeline, save OCR results, and return response.
+     */
+    private Mono<MenuScanResponse> handleCacheMiss(MenuScanRequest request, String userId, String imageHash, Instant startTime) {
+        // Create MenuScan and assign A/B group with imageHash for deduplication
         MenuScan menuScan = abTestService.assignAndCreateScan(
             userId,
-            null,  // imageUrl not stored for MVP
+            null,
+            imageHash,
             request.originLanguageName(),
             request.userLanguageName(),
             request.originCurrencyName(),
@@ -51,28 +150,38 @@ public class MenuScanService {
         );
 
         ABGroup abGroup = menuScan.getAbGroup();
-        log.info("User {} assigned to A/B group: {}", userId, abGroup);
+        log.info("User {} assigned to A/B group: {} (cache miss)", userId, abGroup);
 
-        // Step 3: Execute OCR + Enrichment pipeline (reuse existing MenuService)
-        ReconfigureRequest reconfigureRequest = new ReconfigureRequest(
-            request.base64EncodedImage(),
-            request.originLanguageName(),
-            request.userLanguageName(),
-            request.originCurrencyName(),
-            request.userCurrencyName()
-        );
+        // Step 1: Execute OCR to extract menu items
+        List<MenuItem> ocrResults = ocrReader.read(request.base64EncodedImage());
+        log.info("OCR extracted {} menu items", ocrResults.size());
 
-        return menuService.reconfigure(reconfigureRequest)
-            .map(response -> {
-                // Step 4: Convert to DTOs with conditional filtering
-                List<MenuItemDto> itemDtos = response.results().stream()
+        // Step 2: Save OCR results to DB for caching
+        saveMenuItems(ocrResults, menuScan);
+        log.info("Saved {} OCR results to cache", ocrResults.size());
+
+        // Step 3: Perform enrichment (translation, food scraping, currency conversion)
+        Language originLanguage = Language.fromLanguageName(request.originLanguageName());
+        Language userLanguage = Language.fromLanguageName(request.userLanguageName());
+        Currency originCurrency = Currency.fromCurrencyName(request.originCurrencyName());
+        Currency userCurrency = Currency.fromCurrencyName(request.userCurrencyName());
+
+        return menuItemEnricher.enrichBatchAsync(
+                ocrResults,
+                originLanguage,
+                userLanguage,
+                originCurrency,
+                userCurrency
+            )
+            .map(enrichedResults -> {
+                // Convert enriched results to DTOs
+                List<MenuItemDto> itemDtos = enrichedResults.stream()
                     .map(item -> convertToDto(item, abGroup))
                     .collect(Collectors.toList());
 
-                // Step 5: Calculate processing time
                 double processingTime = Duration.between(startTime, Instant.now()).toMillis() / 1000.0;
 
-                log.info("Menu scan completed for user {} in {}s with {} items",
+                log.info("Menu scan completed (cache miss) for user {} in {}s with {} items",
                     userId, processingTime, itemDtos.size());
 
                 return new MenuScanResponse(
@@ -82,6 +191,17 @@ public class MenuScanService {
                     processingTime
                 );
             });
+    }
+
+    /**
+     * Saves OCR results (MenuItem list) to database as MenuItemEntity.
+     */
+    private void saveMenuItems(List<MenuItem> menuItems, MenuScan menuScan) {
+        List<MenuItemEntity> entities = menuItems.stream()
+            .map(item -> MenuItemEntity.from(item, menuScan))
+            .collect(Collectors.toList());
+
+        menuItemRepository.saveAll(entities);
     }
 
     /**

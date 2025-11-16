@@ -71,7 +71,7 @@
 
 **Ports (인터페이스)**:
 - `OcrReader`: OCR 텍스트 추출 (Gemini 구현체)
-- `FoodScraper`: 음식 정보 스크래핑 (TasteAtlas 구현체)
+- `FoodScrapper`: 음식 정보 스크래핑 (TasteAtlas 구현체)
 - `TranslationClient`: 번역 (Google Translation 구현체)
 
 **파일 위치**:
@@ -83,7 +83,7 @@ menu/
 │   └── port/
 │       └── out/
 │           ├── OcrReader.java              # OCR 포트
-│           ├── FoodScraper.java           # 스크래핑 포트
+│           ├── FoodScrapper.java           # 스크래핑 포트
 │           └── TranslationClient.java      # 번역 포트
 ├── domain/
 │   ├── MenuItem.java                        # 메뉴 아이템 도메인

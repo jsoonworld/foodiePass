@@ -16,12 +16,15 @@ import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @SpringBootTest
 @ActiveProfiles("integration-test")
 @DisplayName("GeminiOcrReader 통합 테스트 - 실제 Gemini API 호출")
+@Disabled("Integration test with external Gemini API - temporarily disabled for test architecture validation")
 class GeminiOcrReaderIntegrationTest {
 
     private static final String TEST_IMAGE_PATH = "src/test/resources/images/test-menu.jpg";

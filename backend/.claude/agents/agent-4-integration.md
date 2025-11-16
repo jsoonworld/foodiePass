@@ -278,7 +278,7 @@ class MenuScanIntegrationTest {
     private TranslationClient translationClient;
 
     @MockBean
-    private FoodScraper foodScrapper;
+    private FoodScrapper foodScrapper;
 
     @MockBean
     private ExchangeRateProvider exchangeRateProvider;
@@ -408,7 +408,7 @@ void treatmentHasTranslation() {
 }
 
 @Test
-@DisplayName("FoodScraper is called for TREATMENT group")
+@DisplayName("FoodScrapper is called for TREATMENT group")
 void treatmentCallsScrapper() {
     // Verify foodScrapper.scrape() was called
 }

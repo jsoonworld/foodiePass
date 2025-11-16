@@ -4,7 +4,7 @@ import foodiepass.server.common.price.domain.Price;
 import foodiepass.server.currency.application.CurrencyService;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.language.domain.Language;
-import foodiepass.server.menu.application.port.out.FoodScraper;
+import foodiepass.server.menu.application.port.out.FoodScrapper;
 import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.domain.FoodInfo;
 import foodiepass.server.menu.domain.MenuItem;
@@ -33,15 +33,17 @@ class MenuItemEnricherTest {
     private MenuItemEnricher menuItemEnricher;
 
     @Mock
-    private FoodScraper foodScraper;
+    private FoodScrapper foodScraper;
     @Mock
     private TranslationClient translationClient;
     @Mock
     private CurrencyService currencyService;
+    @Mock
+    private org.springframework.cache.CacheManager cacheManager;
 
     @BeforeEach
     void setUp() {
-        menuItemEnricher = new MenuItemEnricher(foodScraper, translationClient, currencyService);
+        menuItemEnricher = new MenuItemEnricher(foodScraper, translationClient, currencyService, cacheManager);
     }
 
     @Test

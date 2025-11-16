@@ -1,5 +1,8 @@
 # application-test.yml
+# Unit & Controller Test Profile - External APIs are mocked
 spring:
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MySQL
     driver-class-name: org.h2.Driver
@@ -14,19 +17,31 @@ spring:
   cache:
     type: none
 
+# Disable schedulers in test environment
+scheduler:
+  enabled: false
+
+# Enable debug logging for Spring Boot context loading
+logging:
+  level:
+    org.springframework.boot: DEBUG
+    org.springframework.context: DEBUG
+    org.springframework.beans.factory: DEBUG
+
 google:
   credential:
-    path: "bold-lantern-466505-c4-88a3d8340ac5.json"
-  project-id: "bold-lantern-466505-c4"
-  location: "asia-northeast3"
+    path: "foodiepass-441715-8ac0a9a371d1.json"
+  project-id: "foodiepass-441715"
+  location: "us-central1"
   auth:
     scope: "https://www.googleapis.com/auth/cloud-platform"
   translation:
     model: base
   gemini:
+    api-key: "${GEMINI_API_KEY}"
     model:
-      vision: "gemini-1.5-flash-001"
-      pro: "gemini-1.5-pro-001"
+      vision: "gemini-2.5-pro"
+      pro: "gemini-2.5-pro"
 
 # 서킷 브레이커 적용 버전
 jsoup:
@@ -39,17 +54,28 @@ jsoup:
 #    url-format: "http://localhost:[Mock 서버 포트번호]/finance/quote/%s-%s"
 #    selector: "div.YMlKec.fxKbKc"
 
+# Spoonacular API Configuration
+spoonacular:
+  api-key: "${SPOONACULAR_API_KEY:your-api-key-here}"
+  api:
+    base-url: "https://api.spoonacular.com"
+    search-path: "/food/menuItems/search"
+    max-results: 1
+  defaults:
+    image-url: "https://via.placeholder.com/300x200?text=Food+Image"
+    description: "No description available"
+
 taste-atlas:
   api:
-    url: "https://example.com"
-    auth-token: "test-token"
-  baseUrl: "https://example.com"
+    url: "https://www.tasteatlas.com/api/search"
+    auth-token: ""
+  baseUrl: "https://www.tasteatlas.com"
   defaults:
-    imageUrl: "https://example.com/default.jpg"
-    description: "test-description"
+    imageUrl: "https://via.placeholder.com/400"
+    description: "음식 정보를 불러올 수 없습니다"
   selector:
-    image: ".image"
-    description: ".description"
+    image: "img.food-image"
+    description: "div.description"
 
 resilience4j.circuitbreaker:
   instances:

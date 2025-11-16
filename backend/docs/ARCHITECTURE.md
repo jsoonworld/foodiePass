@@ -206,11 +206,11 @@ src/main/java/foodiepass/server/
 │   │   ├── MenuItemEnricher.java    # 번역+스크래핑+환율 통합
 │   │   └── port/out/
 │   │       ├── OcrReader.java       # OCR 포트
-│   │       ├── FoodScraper.java    # 스크래핑 포트
+│   │       ├── FoodScrapper.java    # 스크래핑 포트
 │   │       └── TranslationClient.java # 번역 포트
 │   ├── infra/                       # 구현체들
 │   │   ├── GeminiOcrReader.java
-│   │   └── TasteAtlasFoodScraper.java
+│   │   └── TasteAtlasFoodScrapper.java
 │   └── api/
 │       └── MenuController.java      # REST API
 │
@@ -778,7 +778,7 @@ public class SurveyService {
 ---
 
 #### 3. TasteAtlas API (음식 매칭)
-**구현체**: `TasteAtlasFoodScraper`
+**구현체**: `TasteAtlasFoodScrapper`
 
 **역할**: 음식 이름 → 사진 URL + 설명
 
@@ -950,7 +950,7 @@ return Mono.zip(
 | **처리 시간 (Control)** | MenuService.scanMenu() | ≤ 3초 | TBD |
 | **처리 시간 (Treatment)** | MenuService.scanMenu() | ≤ 5초 | TBD |
 | **OCR 정확도** | OcrReader.read() | ≥ 90% | TBD |
-| **음식 매칭 연관성** | FoodScraper.scrapAsync() | ≥ 70% | TBD |
+| **음식 매칭 연관성** | FoodScrapper.scrapAsync() | ≥ 70% | TBD |
 | **환율 정확도** | CurrencyService.convert() | ≥ 95% | TBD |
 | **캐시 적중률 (환율)** | Redis | ≥ 80% | TBD |
 | **DB 쿼리 시간** | Repository 메서드 | < 50ms | TBD |

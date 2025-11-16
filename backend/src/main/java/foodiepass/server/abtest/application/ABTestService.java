@@ -47,6 +47,7 @@ public class ABTestService {
      *
      * @param userId User session identifier
      * @param imageUrl Optional image URL for audit
+     * @param imageHash Optional SHA-256 hash of menu image for deduplication
      * @param sourceLanguage Source language code
      * @param targetLanguage Target language code
      * @param sourceCurrency Source currency code
@@ -57,6 +58,7 @@ public class ABTestService {
     public MenuScan assignAndCreateScan(
         String userId,
         String imageUrl,
+        String imageHash,
         String sourceLanguage,
         String targetLanguage,
         String sourceCurrency,
@@ -78,6 +80,11 @@ public class ABTestService {
             sourceLanguage, targetLanguage,
             sourceCurrency, targetCurrency
         );
+
+        // Set imageHash for deduplication if provided
+        if (imageHash != null && !imageHash.isEmpty()) {
+            scan.setImageHash(imageHash);
+        }
 
         return menuScanRepository.save(scan);
     }
