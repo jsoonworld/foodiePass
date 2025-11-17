@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
-@Profile(ProfileConstants.NOT_PERFORMANCE_TEST)
+@Component
+@Profile(ProfileConstants.NOT_TEST_AND_NOT_PERFORMANCE_TEST)
 public class GeminiTranslationClient implements TranslationClient {
 
     private final GeminiClient geminiClient;

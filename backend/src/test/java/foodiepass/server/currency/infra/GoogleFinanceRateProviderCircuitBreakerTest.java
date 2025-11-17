@@ -5,7 +5,10 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import foodiepass.server.menu.application.port.out.OcrReader;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.infra.exception.ScrapingErrorCode;
+import foodiepass.server.menu.infra.scraper.gemini.GeminiClient;
+import foodiepass.server.menu.infra.scraper.tasteAtlas.TasteAtlasFoodScrapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +16,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -31,8 +34,17 @@ class GoogleFinanceRateProviderCircuitBreakerTest {
     @Autowired
     private ExchangeRateProvider exchangeRateProvider;
 
-    @MockitoBean
+    @MockBean
+    private GeminiClient geminiClient;
+
+    @MockBean
+    private TranslationClient translationClient;
+
+    @MockBean
     private OcrReader ocrReader;
+
+    @MockBean
+    private TasteAtlasFoodScrapper tasteAtlasFoodScrapper;
 
     static WireMockServer wireMockServer;
 

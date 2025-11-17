@@ -1,10 +1,9 @@
 package foodiepass.server.config;
 
 import foodiepass.server.language.domain.Language;
-import foodiepass.server.language.infra.GeminiTranslationClient;
 import foodiepass.server.menu.application.port.out.ExchangeRateProvider;
 import foodiepass.server.menu.application.port.out.OcrReader;
-import foodiepass.server.menu.domain.FoodInfo;
+import foodiepass.server.menu.application.port.out.TranslationClient;
 import foodiepass.server.menu.infra.scraper.gemini.GeminiClient;
 import foodiepass.server.menu.infra.scraper.tasteAtlas.TasteAtlasFoodScrapper;
 import jakarta.annotation.PostConstruct;
@@ -35,7 +34,7 @@ public class MockExternalDependenciesConfig {
     private GeminiClient geminiClient;
 
     @MockBean
-    private GeminiTranslationClient geminiTranslationClient;
+    private TranslationClient translationClient;
 
     @MockBean
     private OcrReader ocrReader;
@@ -56,10 +55,10 @@ public class MockExternalDependenciesConfig {
         when(geminiClient.generateText(any(), anyString(), anyString()))
                 .thenReturn("");
 
-        // Mock GeminiTranslationClient - return original text (echo)
-        when(geminiTranslationClient.translateAsync(any(Language.class), any(Language.class), anyString()))
+        // Mock TranslationClient - return original text (echo)
+        when(translationClient.translateAsync(any(Language.class), any(Language.class), anyString()))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(2, String.class)));
-        when(geminiTranslationClient.translateAsync(any(Language.class), any(Language.class), anyList()))
+        when(translationClient.translateAsync(any(Language.class), any(Language.class), anyList()))
                 .thenAnswer(invocation -> Flux.fromIterable(invocation.getArgument(2, List.class)));
     }
 }
