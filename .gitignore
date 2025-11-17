@@ -72,8 +72,12 @@ Thumbs.db
 # ===============================================================
 HELP.md
 
+# Application config files (contains sensitive info)
 *.yml
 *.yaml
+
+# Except for CodeRabbit configuration
+!.coderabbit.yaml
 
 # ===============================================================
 # Credentials & Sensitive Info (인증서 및 민감 정보)
