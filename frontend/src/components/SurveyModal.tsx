@@ -43,7 +43,7 @@ export default function SurveyModal({ scanId, delay = 5000 }: SurveyModalProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" data-testid="survey-modal">
       <div className="bg-card border border-border rounded-xl shadow-lg max-w-md w-full p-6 animate-in fade-in slide-in-from-bottom-4">
         {!submitted ? (
           <>
