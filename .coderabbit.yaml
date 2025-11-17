@@ -1,38 +1,35 @@
 # CodeRabbit Configuration
-# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+# https://docs.coderabbit.ai/guides/configure-coderabbit
 
-# Language settings
-language: en-US
-early_access: false
+# Language and tone for reviews
+language: ko
+tone_instructions: "전문적이고 건설적인 피드백을 제공해주세요. 가설 검증(H1, H2, H3)과 관련된 로직의 정확성을 중점적으로 검토해주세요."
 
 # Review settings
 reviews:
-  # Enable reviews for all branches including develop
+  # Enable automatic reviews
   auto_review:
     enabled: true
-    # Review PRs targeting these branches
+    # Base branches to auto-review PRs targeting these branches
     base_branches:
       - main
-      - develop
       - master
+      - develop  # develop 브랜치로 가는 PR도 자동 리뷰
+
+  # Show review status message
+  review_status: true
+
+  # Auto-collapse bot comments after resolved
+  collapse_walkthrough: false
+
+  # Review profile
+  profile: "chill"  # Options: chill, assertive
 
   # Request changes workflow
   request_changes_workflow: false
 
   # High level summary
   high_level_summary: true
-
-  # Poem style
-  poem: false
-
-  # Review status
-  review_status: true
-
-  # Collapse walkthrough
-  collapse_walkthrough: false
-
-  # Auto reply
-  auto_reply: true
 
   # Path filters - exclude generated/build files
   path_filters:
@@ -58,67 +55,7 @@ reviews:
 chat:
   auto_reply: true
 
-# Knowledge base settings (optional)
+# Project context for better reviews
 knowledge_base:
-  # Project-specific context
   learnings:
     scope: "global"
-
-# Tools settings
-tools:
-  # AST tools
-  ast-grep:
-    enabled: true
-
-  # Shellcheck
-  shellcheck:
-    enabled: true
-
-# Tone settings
-tone_instructions: |
-  - Be professional and constructive
-  - Focus on code quality, maintainability, and best practices
-  - Provide specific, actionable feedback
-  - Acknowledge good code patterns
-  - Consider the project context (MVP hypothesis validation)
-  - Prioritize issues by severity: security > bugs > performance > style
-
-# Review priorities
-review_instructions: |
-  ## Review Focus Areas
-
-  ### High Priority
-  - Security vulnerabilities (SQL injection, XSS, CSRF, etc.)
-  - Data safety and integrity
-  - Authentication and authorization issues
-  - API key exposure or hardcoded secrets
-  - Error handling and edge cases
-  - Null/undefined handling
-
-  ### Medium Priority
-  - Performance bottlenecks
-  - Memory leaks
-  - Inefficient algorithms
-  - Unnecessary re-renders (React)
-  - Database query optimization
-  - API design and consistency
-
-  ### Low Priority
-  - Code style and formatting (if not covered by linters)
-  - Naming conventions
-  - Documentation completeness
-  - Test coverage
-
-  ## Project Context
-  - This is an MVP for hypothesis validation (H1, H2, H3)
-  - Focus on features that directly support hypothesis testing
-  - Backend: Spring Boot 3.5.3 + Java 21
-  - Frontend: React 18.3.1 + TypeScript
-  - Monorepo structure with separate backend/frontend
-
-  ## Review Guidelines
-  - Validate A/B test implementation correctness
-  - Check survey data collection accuracy
-  - Verify Control vs Treatment UI differentiation
-  - Ensure API integration consistency
-  - Review E2E test coverage

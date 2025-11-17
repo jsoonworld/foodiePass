@@ -1,0 +1,118 @@
+# application-local.yml
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: true
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    foodiepass.server: debug
+
+# Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Spring MVC async request timeout (3 minutes)
+spring.mvc.async.request-timeout: 180000
+
+# Mock configurations for local development
+taste-atlas:
+  enabled: false  # Temporarily disabled due to API connection issues
+  api:
+    url: "https://www.tasteatlas.com/api"
+    auth-token: "mock-token"
+  base-url: "https://www.tasteatlas.com"
+  defaults:
+    image-url: "https://via.placeholder.com/300x200?text=Food+Image"
+    description: "No description available"
+  selector:
+    image: "img.food-image"
+    description: ".food-description"
+
+# Spoonacular API Configuration
+spoonacular:
+  api-key: "${SPOONACULAR_API_KEY:your-api-key-here}"
+  api:
+    base-url: "https://api.spoonacular.com"
+    search-path: "/food/menuItems/search"
+    max-results: 1
+  defaults:
+    image-url: "https://via.placeholder.com/300x200?text=Food+Image"
+    description: "No description available"
+
+google:
+  credential:
+    path: "foodiepass-441715-8ac0a9a371d1.json"
+  project-id: "foodiepass-441715"
+  location: "us-central1"
+  auth:
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+  translation:
+    model: "nmt"
+  gemini:
+    api-key: "${GEMINI_API_KEY}"
+    model:
+      vision: "gemini-2.5-pro"
+      pro: "gemini-2.5-pro"
+
+jsoup:
+  google-finance:
+    url-format: "https://www.google.com/finance/quote/%s-%s"
+    selector: "div.YMlKec.fxKbKc"
+
+# Resilience4j Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      gemini:
+        sliding-window-size: 10
+        failure-rate-threshold: 80
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        minimum-number-of-calls: 5
+        record-exceptions:
+          - io.grpc.StatusRuntimeException
+          - foodiepass.server.menu.infra.exception.GeminiException
+
+  ratelimiter:
+    instances:
+      gemini:
+        limit-for-period: 10
+        limit-refresh-period: 1s
+        timeout-duration: 5s

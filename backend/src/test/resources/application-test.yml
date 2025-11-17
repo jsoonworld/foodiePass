@@ -1,0 +1,100 @@
+# application-test.yml
+# Unit & Controller Test Profile - External APIs are mocked
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  cache:
+    type: none
+
+# Disable schedulers in test environment
+scheduler:
+  enabled: false
+
+# Enable debug logging for Spring Boot context loading
+logging:
+  level:
+    org.springframework.boot: DEBUG
+    org.springframework.context: DEBUG
+    org.springframework.beans.factory: DEBUG
+
+google:
+  credential:
+    path: "foodiepass-441715-8ac0a9a371d1.json"
+  project-id: "foodiepass-441715"
+  location: "us-central1"
+  auth:
+    scope: "https://www.googleapis.com/auth/cloud-platform"
+  translation:
+    model: base
+  gemini:
+    api-key: "${GEMINI_API_KEY}"
+    model:
+      vision: "gemini-2.5-pro"
+      pro: "gemini-2.5-pro"
+
+# 서킷 브레이커 적용 버전
+jsoup:
+  google-finance:
+    url-format: "https://www.google.com/finance/quote/%s-%s"
+    selector: "div.YMlKec.fxKbKc"
+
+#jsoup:
+#  google-finance:
+#    url-format: "http://localhost:[Mock 서버 포트번호]/finance/quote/%s-%s"
+#    selector: "div.YMlKec.fxKbKc"
+
+# Spoonacular API Configuration
+spoonacular:
+  api-key: "${SPOONACULAR_API_KEY:your-api-key-here}"
+  api:
+    base-url: "https://api.spoonacular.com"
+    search-path: "/food/menuItems/search"
+    max-results: 1
+  defaults:
+    image-url: "https://via.placeholder.com/300x200?text=Food+Image"
+    description: "No description available"
+
+taste-atlas:
+  api:
+    url: "https://www.tasteatlas.com/api/search"
+    auth-token: ""
+  baseUrl: "https://www.tasteatlas.com"
+  defaults:
+    imageUrl: "https://via.placeholder.com/400"
+    description: "음식 정보를 불러올 수 없습니다"
+  selector:
+    image: "img.food-image"
+    description: "div.description"
+
+resilience4j.circuitbreaker:
+  instances:
+    exchangeRate:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 10
+      sliding-window-type: COUNT_BASED
+      sliding-window-size: 10
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    tasteAtlas:
+      failure-rate-threshold: 50
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2
+    gemini:
+      failure-rate-threshold: 60
+      minimum-number-of-calls: 5
+      sliding-window-size: 5
+      wait-duration-in-open-state: 10s
+      permitted-number-of-calls-in-half-open-state: 2

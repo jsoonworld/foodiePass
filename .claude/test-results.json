@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-11-11T23:37:17.736Z",
+  "tests": [
+    {
+      "testName": "Control Group Flow",
+      "passed": false,
+      "duration": 19.827,
+      "details": {
+        "error": "page.waitForURL: Timeout 15000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================"
+      },
+      "timestamp": "2025-11-11T23:37:38.516Z"
+    },
+    {
+      "testName": "Treatment Group Flow",
+      "passed": false,
+      "duration": 19.659,
+      "details": {
+        "error": "page.waitForURL: Timeout 15000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation until \"load\"\n============================================================"
+      },
+      "timestamp": "2025-11-11T23:37:58.217Z"
+    },
+    {
+      "testName": "A/B Randomization",
+      "passed": false,
+      "duration": 98.38,
+      "details": {
+        "iterations": 5,
+        "controlCount": 0,
+        "treatmentCount": 0,
+        "unknownCount": 5
+      },
+      "timestamp": "2025-11-11T23:39:36.632Z"
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "passed": 0,
+    "failed": 3
+  }
+}

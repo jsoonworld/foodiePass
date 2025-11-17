@@ -1,0 +1,7 @@
+# Scripts Directory
+
+This directory will contain development and deployment scripts:
+- setup.sh - Project initialization
+- dev.sh - Local development environment
+- test-all.sh - Run all tests
+- etc.

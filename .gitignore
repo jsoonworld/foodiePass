@@ -3,7 +3,7 @@
 *.iml
 *.iws
 *.ipr
-out/
+# out/ - Removed to allow src/*/port/out directories
 
 ### Eclipse / STS ###
 .apt_generated/
@@ -28,16 +28,54 @@ nbdist/
 
 
 # ===============================================================
-# Build & Dependencies (빌드 및 의존성 관련)
+# Backend (Spring Boot)
 # ===============================================================
 
 ### Gradle ###
-.gradle/
-build/
+backend/.gradle/
+backend/build/
+backend/out/
 
 # Gradle Wrapper는 제외하지 않음
-!gradle/wrapper/gradle-wrapper.jar
-!gradle-wrapper.properties
+!backend/gradle/wrapper/gradle-wrapper.jar
+!backend/gradle-wrapper.properties
+
+
+# ===============================================================
+# Frontend (Node.js)
+# ===============================================================
+
+### Node ###
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+### Environment ###
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+### Build artifacts ###
+frontend/*.log
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+### Testing ###
+frontend/coverage/
+frontend/.nyc_output/
+
+
+# ===============================================================
+# Build & Dependencies (빌드 및 의존성 관련)
+# ===============================================================
+
+### General Build ###
+.gradle/
+build/
 
 
 # ===============================================================
@@ -72,14 +110,34 @@ Thumbs.db
 # ===============================================================
 HELP.md
 
-# Application config files (contains sensitive info)
-*.yml
-*.yaml
-
-# Except for CodeRabbit configuration
-!.coderabbit.yaml
-
 # ===============================================================
 # Credentials & Sensitive Info (인증서 및 민감 정보)
 # ===============================================================
-*.json
+
+# Google Cloud credentials (JSON files in resources)
+backend/src/main/resources/*.json
+backend/src/test/resources/*.json
+**/bold-lantern-*.json
+**/foodiepass-*.json
+
+# Environment files
+backend/env.*
+backend/.env*
+
+# Python virtual environment
+scripts/.venv/
+scripts/__pycache__/
+*.pyc
+
+# Claude settings (local)
+.claude/settings.local.json
+**/.claude/settings.local.json
+
+# ===============================================================
+# Backups & Temporary Files (백업 및 임시 파일)
+# ===============================================================
+*_backup*/
+*/docs_backup/
+*/claude_backup/
+WORKTREE_GUIDE.md
+scripts/agents/
