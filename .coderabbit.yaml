@@ -3,7 +3,7 @@
 
 # Language and tone for reviews
 language: ko
-tone_instructions: "전문적이고 건설적인 피드백을 제공해주세요."
+tone_instructions: "전문적이고 건설적인 피드백을 제공해주세요. 가설 검증(H1, H2, H3)과 관련된 로직의 정확성을 중점적으로 검토해주세요."
 
 # Review settings
 reviews:
@@ -28,42 +28,34 @@ reviews:
   # Request changes workflow
   request_changes_workflow: false
 
-  # Review levels for different file types
-  review_levels:
-    "**/*.java": "high"
-    "**/*.ts": "high"
-    "**/*.tsx": "high"
-    "**/*.js": "medium"
-    "**/*.jsx": "medium"
-    "**/*.yml": "medium"
-    "**/*.yaml": "medium"
-    "**/*.md": "low"
+  # High level summary
+  high_level_summary: true
 
-  # Path-based instructions
-  path_instructions:
-    - path: "backend/**"
-      instructions: |
-        - Java 21 및 Spring Boot 3.5.3 모범 사례를 따르세요
-        - 보안 취약점을 확인하세요
-        - 성능 최적화 기회를 찾으세요
-
-    - path: "frontend/**"
-      instructions: |
-        - React 및 TypeScript 모범 사례를 따르세요
-        - 접근성(a11y) 이슈를 확인하세요
-        - 성능 최적화 기회를 찾으세요
-
-    - path: "**/*.test.*"
-      instructions: |
-        - 테스트 커버리지를 확인하세요
-        - 엣지 케이스가 적절히 처리되는지 확인하세요
+  # Path filters - exclude generated/build files
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/target/**"
+    - "!**/.gradle/**"
+    - "!**/bin/**"
+    - "!**/*.min.js"
+    - "!**/*.bundle.js"
+    - "!**/package-lock.json"
+    - "!**/bun.lockb"
+    - "!**/yarn.lock"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.png"
+    - "!**/*.gif"
+    - "!**/*.svg"
+    - "!**/*.ico"
 
 # Chat settings
 chat:
   auto_reply: true
 
-# Early access features
-early_access: false
-
-# Enable AI tips
-enable_free_tier: true
+# Project context for better reviews
+knowledge_base:
+  learnings:
+    scope: "global"
