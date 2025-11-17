@@ -14,11 +14,12 @@ function TreatmentMenu({ items }: TreatmentMenuProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="scan-results">
       {items.map((item) => (
         <div
           key={item.id}
           className="bg-card border border-border rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all"
+          data-testid="menu-item"
         >
           <div className="aspect-[4/3] bg-muted relative">
             {item.imageUrl && !imageErrors[item.id] ? (
@@ -28,6 +29,7 @@ function TreatmentMenu({ items }: TreatmentMenuProps) {
                 loading="lazy"
                 className="w-full h-full object-cover"
                 onError={() => handleImageError(item.id)}
+                data-testid="food-image"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -45,7 +47,7 @@ function TreatmentMenu({ items }: TreatmentMenuProps) {
             </p>
             
             {item.description && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-3" data-testid="food-description">
                 {item.description}
               </p>
             )}

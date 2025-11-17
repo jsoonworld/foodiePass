@@ -68,7 +68,7 @@ export default function MenuUploader({ onImageSelect, disabled }: MenuUploaderPr
   }, [onImageSelect]);
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-testid="menu-uploader">
       {!preview ? (
         <div
           onDrop={handleDrop}
@@ -99,7 +99,7 @@ export default function MenuUploader({ onImageSelect, disabled }: MenuUploaderPr
           </p>
         </div>
       ) : (
-        <div className="relative rounded-lg overflow-hidden bg-card border border-border shadow-md">
+        <div className="relative rounded-lg overflow-hidden bg-card border border-border shadow-md" data-testid="image-preview">
           <img
             src={preview}
             alt="Menu preview"

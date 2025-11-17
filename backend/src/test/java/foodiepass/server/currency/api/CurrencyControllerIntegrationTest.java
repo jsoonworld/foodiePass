@@ -1,5 +1,6 @@
 package foodiepass.server.currency.api;
 
+import foodiepass.server.config.MockExternalDependenciesConfig;
 import foodiepass.server.currency.application.ExchangeRateCache;
 import foodiepass.server.currency.domain.Currency;
 import foodiepass.server.currency.dto.request.CalculatePriceRequest;
@@ -7,9 +8,6 @@ import foodiepass.server.currency.dto.request.CalculatePriceRequest.OrderElement
 import foodiepass.server.currency.dto.response.CalculatePriceResponse;
 import foodiepass.server.currency.dto.response.CurrencyResponse;
 import foodiepass.server.global.success.SuccessResponse;
-import foodiepass.server.menu.application.MenuService;
-import foodiepass.server.menu.application.port.out.FoodScrapper;
-import foodiepass.server.menu.application.port.out.OcrReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -18,9 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -33,10 +29,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(MockExternalDependenciesConfig.class)
 @DisplayName("CurrencyController 통합 테스트")
 class CurrencyControllerIntegrationTest {
 

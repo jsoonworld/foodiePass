@@ -7,11 +7,12 @@ interface ControlMenuProps {
 
 function ControlMenu({ items }: ControlMenuProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="scan-results">
       {items.map((item) => (
         <div
           key={item.id}
           className="bg-card border border-border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+          data-testid="menu-item"
         >
           <h3 className="text-base font-bold text-foreground mb-1">
             {item.originalName}
